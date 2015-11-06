@@ -10,7 +10,7 @@ Elm.Main.make = function (_elm) {
    _L = _N.List.make(_elm),
    $moduleName = "Main",
    $Basics = Elm.Basics.make(_elm),
-   $Color = Elm.Color.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
    $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
    $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $Keyboard = Elm.Keyboard.make(_elm),
@@ -18,211 +18,54 @@ Elm.Main.make = function (_elm) {
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
-   $Text = Elm.Text.make(_elm),
    $Time = Elm.Time.make(_elm),
    $Window = Elm.Window.make(_elm);
    var delta = A2($Signal.map,
    $Time.inSeconds,
    $Time.fps(35));
-   var make = F2(function (obj,
-   shape) {
-      return $Graphics$Collage.move({ctor: "_Tuple2"
-                                    ,_0: obj.x
-                                    ,_1: obj.y})($Graphics$Collage.filled($Color.white)(shape));
-   });
-   var msg = "SPACE to start, WS and &uarr;&darr; to move";
-   var textGreen = A3($Color.rgb,
-   160,
-   200,
-   160);
-   var txt = F2(function (f,
-   string) {
-      return $Graphics$Element.leftAligned(f($Text.monospace($Text.color(textGreen)($Text.fromString(string)))));
-   });
-   var pongGreen = A3($Color.rgb,
-   60,
-   100,
-   60);
-   var stepV = F3(function (v,
-   lowerCollision,
-   upperCollision) {
-      return lowerCollision ? $Basics.abs(v) : upperCollision ? 0 - $Basics.abs(v) : v;
-   });
-   var near = F3(function (k,c,n) {
-      return _U.cmp(n,
-      k - c) > -1 && _U.cmp(n,
-      k + c) < 1;
-   });
-   var within = F2(function (ball,
-   paddle) {
-      return A3(near,
-      paddle.x,
-      8,
-      ball.x) && A3(near,
-      paddle.y,
-      20,
-      ball.y);
-   });
-   var physicsUpdate = F2(function (t,
-   _v0) {
-      return function () {
-         return _U.replace([["x"
-                            ,_v0.x + _v0.vx * t]
-                           ,["y",_v0.y + _v0.vy * t]],
-         _v0);
-      }();
-   });
-   var Input = F4(function (a,
-   b,
-   c,
-   d) {
+   var Input = F2(function (a,b) {
       return {_: {}
-             ,delta: d
-             ,dir1: b
-             ,dir2: c
+             ,delta: b
              ,space: a};
    });
-   var input = $Signal.sampleOn(delta)(A5($Signal.map4,
+   var input = $Signal.sampleOn(delta)(A3($Signal.map2,
    Input,
    $Keyboard.space,
-   A2($Signal.map,
-   function (_) {
-      return _.y;
-   },
-   $Keyboard.wasd),
-   A2($Signal.map,
-   function (_) {
-      return _.y;
-   },
-   $Keyboard.arrows),
    delta));
-   var Game = F4(function (a,
-   b,
-   c,
-   d) {
+   var Game = F3(function (a,b,c) {
       return {_: {}
-             ,ball: b
-             ,player1: c
-             ,player2: d
+             ,backgroundX: c
+             ,foregroundX: b
              ,state: a};
    });
-   var Player = F5(function (a,
-   b,
-   c,
-   d,
-   e) {
-      return {_: {}
-             ,score: e
-             ,vx: c
-             ,vy: d
-             ,x: a
-             ,y: b};
-   });
-   var player = function (x) {
-      return A5(Player,x,0,0,0,0);
-   };
-   var Ball = F4(function (a,
-   b,
-   c,
-   d) {
-      return {_: {}
-             ,vx: c
-             ,vy: d
-             ,x: a
-             ,y: b};
-   });
+   var constants = {_: {}
+                   ,backgroundScrollV: 40
+                   ,foregroundScrollV: 80};
    var Pause = {ctor: "Pause"};
+   var defaultGame = {_: {}
+                     ,backgroundX: 0
+                     ,foregroundX: 0
+                     ,state: Pause};
    var Play = {ctor: "Play"};
    var $ = {ctor: "_Tuple2"
-           ,_0: 300
-           ,_1: 200},
-   halfWidth = $._0,
-   halfHeight = $._1;
-   var defaultGame = {_: {}
-                     ,ball: A4(Ball,0,0,200,200)
-                     ,player1: player(20 - halfWidth)
-                     ,player2: player(halfWidth - 20)
-                     ,state: Pause};
-   var updateBall = F4(function (t,
-   _v2,
-   p1,
-   p2) {
-      return function () {
-         return $Basics.not(A2(near,
-         0,
-         halfWidth)(_v2.x)) ? _U.replace([["x"
-                                          ,0]
-                                         ,["y",0]],
-         _v2) : A2(physicsUpdate,
-         t,
-         _U.replace([["vx"
-                     ,A3(stepV,
-                     _v2.vx,
-                     A2(within,_v2,p1),
-                     A2(within,_v2,p2))]
-                    ,["vy"
-                     ,A3(stepV,
-                     _v2.vy,
-                     _U.cmp(_v2.y,
-                     7 - halfHeight) < 0,
-                     _U.cmp(_v2.y,
-                     halfHeight - 7) > 0)]],
-         _v2));
-      }();
-   });
-   var updatePlayer = F4(function (t,
-   dir,
-   points,
-   player) {
-      return function () {
-         var player1 = A2(physicsUpdate,
-         t,
-         _U.replace([["vy"
-                     ,$Basics.toFloat(dir) * 200]],
-         player));
-         return _U.replace([["y"
-                            ,A3($Basics.clamp,
-                            22 - halfHeight,
-                            halfHeight - 22,
-                            player1.y)]
-                           ,["score"
-                            ,player.score + points]],
-         player1);
-      }();
-   });
-   var update = F2(function (_v4,
-   _v5) {
+           ,_0: 800
+           ,_1: 480},
+   gameWidth = $._0,
+   gameHeight = $._1;
+   var update = F2(function (_v0,
+   _v1) {
       return function () {
          return function () {
             return function () {
-               var newBall = _U.eq(_v5.state,
-               Pause) ? _v5.ball : A4(updateBall,
-               _v4.delta,
-               _v5.ball,
-               _v5.player1,
-               _v5.player2);
-               var score2 = _U.cmp(_v5.ball.x,
-               0 - halfWidth) < 0 ? 1 : 0;
-               var score1 = _U.cmp(_v5.ball.x,
-               halfWidth) > 0 ? 1 : 0;
-               var newState = _v4.space ? Play : !_U.eq(score1,
-               score2) ? Pause : _v5.state;
-               return _U.replace([["state"
-                                  ,newState]
-                                 ,["ball",newBall]
-                                 ,["player1"
-                                  ,A4(updatePlayer,
-                                  _v4.delta,
-                                  _v4.dir1,
-                                  score1,
-                                  _v5.player1)]
-                                 ,["player2"
-                                  ,A4(updatePlayer,
-                                  _v4.delta,
-                                  _v4.dir2,
-                                  score2,
-                                  _v5.player2)]],
-               _v5);
+               var newGame = A2($Debug.watch,
+               "game",
+               _v1);
+               return _U.replace([["foregroundX"
+                                  ,_v1.foregroundX + _v0.delta * constants.backgroundScrollV]
+                                 ,["backgroundX"
+                                  ,_U.cmp(_v1.backgroundX,
+                                  gameWidth) > 0 ? 0 : _v1.backgroundX + _v0.delta * constants.backgroundScrollV]],
+               newGame);
             }();
          }();
       }();
@@ -231,57 +74,32 @@ Elm.Main.make = function (_elm) {
    update,
    defaultGame,
    input);
-   var $ = {ctor: "_Tuple2"
-           ,_0: 600
-           ,_1: 400},
-   gameWidth = $._0,
-   gameHeight = $._1;
-   var view = F2(function (_v8,
-   _v9) {
+   var view = F2(function (_v4,
+   _v5) {
       return function () {
          return function () {
-            switch (_v8.ctor)
+            switch (_v4.ctor)
             {case "_Tuple2":
-               return function () {
-                    var scores = A2(txt,
-                    $Text.height(50),
-                    A2($Basics._op["++"],
-                    $Basics.toString(_v9.player1.score),
-                    A2($Basics._op["++"],
-                    "  ",
-                    $Basics.toString(_v9.player2.score))));
-                    return A3($Graphics$Element.container,
-                    _v8._0,
-                    _v8._1,
-                    $Graphics$Element.middle)(A3($Graphics$Collage.collage,
-                    gameWidth,
-                    gameHeight,
-                    _L.fromArray([$Graphics$Collage.filled(pongGreen)(A2($Graphics$Collage.rect,
-                                 gameWidth,
-                                 gameHeight))
-                                 ,make(_v9.ball)(A2($Graphics$Collage.oval,
-                                 15,
-                                 15))
-                                 ,make(_v9.player1)(A2($Graphics$Collage.rect,
-                                 10,
-                                 40))
-                                 ,make(_v9.player2)(A2($Graphics$Collage.rect,
-                                 10,
-                                 40))
-                                 ,$Graphics$Collage.move({ctor: "_Tuple2"
-                                                         ,_0: 0
-                                                         ,_1: gameHeight / 2 - 40})($Graphics$Collage.toForm(scores))
-                                 ,$Graphics$Collage.move({ctor: "_Tuple2"
-                                                         ,_0: 0
-                                                         ,_1: 40 - gameHeight / 2})($Graphics$Collage.toForm(_U.eq(_v9.state,
-                                 Play) ? A2($Graphics$Element.spacer,
-                                 1,
-                                 1) : A2(txt,
-                                 $Basics.identity,
-                                 msg)))])));
-                 }();}
+               return A3($Graphics$Element.container,
+                 _v4._0,
+                 _v4._1,
+                 $Graphics$Element.middle)(A3($Graphics$Collage.collage,
+                 gameWidth,
+                 gameHeight,
+                 _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
+                                                      ,_0: 0 - _v5.backgroundX
+                                                      ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                              gameWidth,
+                              gameHeight,
+                              "/images/background.png")))
+                              ,$Graphics$Collage.move({ctor: "_Tuple2"
+                                                      ,_0: gameWidth - _v5.backgroundX
+                                                      ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                              gameWidth,
+                              gameHeight,
+                              "/images/background.png")))])));}
             _U.badCase($moduleName,
-            "between lines 154 and 172");
+            "between lines 59 and 68");
          }();
       }();
    });
@@ -292,29 +110,14 @@ Elm.Main.make = function (_elm) {
    _elm.Main.values = {_op: _op
                       ,gameHeight: gameHeight
                       ,gameWidth: gameWidth
-                      ,halfHeight: halfHeight
-                      ,halfWidth: halfWidth
                       ,Play: Play
                       ,Pause: Pause
-                      ,Ball: Ball
-                      ,Player: Player
+                      ,constants: constants
                       ,Game: Game
-                      ,player: player
                       ,defaultGame: defaultGame
                       ,Input: Input
                       ,update: update
-                      ,updateBall: updateBall
-                      ,updatePlayer: updatePlayer
-                      ,physicsUpdate: physicsUpdate
-                      ,near: near
-                      ,within: within
-                      ,stepV: stepV
                       ,view: view
-                      ,pongGreen: pongGreen
-                      ,textGreen: textGreen
-                      ,txt: txt
-                      ,msg: msg
-                      ,make: make
                       ,main: main
                       ,gameState: gameState
                       ,delta: delta
