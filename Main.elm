@@ -10,23 +10,27 @@ import Debug
 
 (gameWidth,gameHeight) = (800,480)
 
-type State = Play | Pause
+type State = Play | Starting | GameOver
+
 constants =
   { backgroundScrollV = 40
   , foregroundScrollV = 80
+  , playerX = 100 - gameWidth / 2
   }
 
 type alias Game =
   { state : State
   , foregroundX : Float
   , backgroundX : Float
+  , playerY : Float
   }
 
 defaultGame : Game
 defaultGame =
-  { state = Pause
+  { state = Starting
   , foregroundX = 0
   , backgroundX = 0
+  , playerY = 0
   }
 
 type alias Input =
@@ -36,35 +40,50 @@ type alias Input =
 
 -- UPDATE
 update : Input -> Game -> Game
-update  {space,delta} ({state,foregroundX,backgroundX} as game) =
+update  input game =
   let
     newGame =
       Debug.watch "game" game
+    newPlayerY =
+      updatePlayerY input game
+    newBackgroundX =
+      updateBackground input.delta game.backgroundX
   in
     {newGame |
-      foregroundX <- game.foregroundX + delta * constants.backgroundScrollV,
-      backgroundX <-
-        if game.backgroundX > gameWidth
-        then
-          0
-        else
-          game.backgroundX + delta * constants.backgroundScrollV
+        -- foregroundX <- game.foregroundX + input.delta * constants.backgroundScrollV
+        backgroundX <- newBackgroundX
+    ,   playerY <- newPlayerY
     }
+
+updatePlayerY : Input -> Game -> Float
+updatePlayerY input game =
+  case game.state of
+    Starting -> game.playerY + (sin (game.backgroundX / 10))
+    GameOver -> game.playerY
+    Play     -> game.playerY
+
+
+updateBackground : Time -> Float -> Float
+updateBackground delta currentBackgroundX =
+  if currentBackgroundX > gameWidth
+    then 0
+  else
+    currentBackgroundX + delta * constants.backgroundScrollV
 
 -- VIEW
 view : (Int,Int) -> Game -> Element
-view (w,h) {state, foregroundX, backgroundX} =
+view (w,h) {state, foregroundX, backgroundX, playerY} =
   -- let
   -- in
     container w h middle <|
     collage gameWidth gameHeight
      [
-
-
         toForm (image gameWidth gameHeight "/images/background.png")
           |> move (-backgroundX, 0)
      ,  toForm (image gameWidth gameHeight "/images/background.png")
           |> move (gameWidth - backgroundX, 0)
+     ,  toForm (image 60 35 "/images/plane.gif")
+         |> move (constants.playerX, playerY)
      ]
 
 -- SIGNALS
