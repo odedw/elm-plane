@@ -10,7 +10,7 @@ import Debug
 
 (gameWidth,gameHeight) = (800,480)
 
-type State = Play | Starting | GameOver
+type State = Play | Start | GameOver
 
 constants =
   { backgroundScrollV = 40
@@ -27,7 +27,7 @@ type alias Game =
 
 defaultGame : Game
 defaultGame =
-  { state = Starting
+  { state = Start
   , foregroundX = 0
   , backgroundX = 0
   , playerY = 0
@@ -48,20 +48,28 @@ update  input game =
       updatePlayerY input game
     newBackgroundX =
       updateBackground input.delta game.backgroundX
+    newState =
+      updateState input game
   in
     {newGame |
         -- foregroundX <- game.foregroundX + input.delta * constants.backgroundScrollV
         backgroundX <- newBackgroundX
-    ,   playerY <- newPlayerY
+    ,   playerY     <- newPlayerY
+    ,   state       <- newState
     }
 
 updatePlayerY : Input -> Game -> Float
 updatePlayerY input game =
   case game.state of
-    Starting -> game.playerY + (sin (game.backgroundX / 10))
+    Start -> game.playerY + (sin (game.backgroundX / 10))
     GameOver -> game.playerY
     Play     -> game.playerY
 
+updateState : Input -> Game -> State
+updateState input game =
+  if | game.state == Start && input.space -> Play
+     | game.state == GameOver && input.space -> Start
+     | otherwise -> game.state
 
 updateBackground : Time -> Float -> Float
 updateBackground delta currentBackgroundX =

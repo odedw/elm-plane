@@ -3148,10 +3148,10 @@ Elm.Main.make = function (_elm) {
             return game.playerY;
             case "Play":
             return game.playerY;
-            case "Starting":
+            case "Start":
             return game.playerY + $Basics.sin(game.backgroundX / 10);}
          _U.badCase($moduleName,
-         "between lines 60 and 63");
+         "between lines 63 and 66");
       }();
    });
    var Input = F2(function (a,b) {
@@ -3174,13 +3174,19 @@ Elm.Main.make = function (_elm) {
              ,state: a};
    });
    var GameOver = {ctor: "GameOver"};
-   var Starting = {ctor: "Starting"};
+   var Start = {ctor: "Start"};
    var defaultGame = {_: {}
                      ,backgroundX: 0
                      ,foregroundX: 0
                      ,playerY: 0
-                     ,state: Starting};
+                     ,state: Start};
    var Play = {ctor: "Play"};
+   var updateState = F2(function (input,
+   game) {
+      return _U.eq(game.state,
+      Start) && input.space ? Play : _U.eq(game.state,
+      GameOver) && input.space ? Start : game.state;
+   });
    var $ = {ctor: "_Tuple2"
            ,_0: 800
            ,_1: 480},
@@ -3198,6 +3204,9 @@ Elm.Main.make = function (_elm) {
    var update = F2(function (input,
    game) {
       return function () {
+         var newState = A2(updateState,
+         input,
+         game);
          var newBackgroundX = A2(updateBackground,
          input.delta,
          game.backgroundX);
@@ -3209,7 +3218,8 @@ Elm.Main.make = function (_elm) {
          game);
          return _U.replace([["backgroundX"
                             ,newBackgroundX]
-                           ,["playerY",newPlayerY]],
+                           ,["playerY",newPlayerY]
+                           ,["state",newState]],
          newGame);
       }();
    });
@@ -3248,7 +3258,7 @@ Elm.Main.make = function (_elm) {
                               35,
                               "/images/plane.gif")))])));}
             _U.badCase($moduleName,
-            "between lines 78 and 87");
+            "between lines 86 and 95");
          }();
       }();
    });
@@ -3260,7 +3270,7 @@ Elm.Main.make = function (_elm) {
                       ,gameHeight: gameHeight
                       ,gameWidth: gameWidth
                       ,Play: Play
-                      ,Starting: Starting
+                      ,Start: Start
                       ,GameOver: GameOver
                       ,constants: constants
                       ,Game: Game
@@ -3268,6 +3278,7 @@ Elm.Main.make = function (_elm) {
                       ,Input: Input
                       ,update: update
                       ,updatePlayerY: updatePlayerY
+                      ,updateState: updateState
                       ,updateBackground: updateBackground
                       ,view: view
                       ,main: main
