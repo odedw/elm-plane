@@ -26,6 +26,7 @@ type alias Game =
   , backgroundX : Float
   , playerY : Float
   , playerVY : Float
+  , transitionedToStart : Bool
   }
 
 defaultGame : Game
@@ -35,6 +36,7 @@ defaultGame =
   , backgroundX = 0
   , playerY = 0
   , playerVY = 0
+  , transitionedToStart = False
   }
 
 type alias Input =
@@ -58,6 +60,10 @@ update  input game =
       updateState input game
     newVY =
       updatePlayerVelocity input game
+    newTransitioned =
+      if | game.state == GameOver && input.space -> True
+         | game.state == Start && not input.space -> False
+         | otherwise -> game.transitionedToStart
   in
     {newGame |
         -- foregroundX <- game.foregroundX + input.delta * constants.backgroundScrollV
@@ -65,6 +71,7 @@ update  input game =
     ,   playerY     <- newPlayerY
     ,   state       <- newState
     ,   playerVY    <- newVY
+    ,   transitionedToStart <- newTransitioned
     }
 
 updatePlayerY : Input -> Game -> Float
@@ -82,7 +89,7 @@ updatePlayerVelocity input game =
 
 updateState : Input -> Game -> State
 updateState input game =
-  if | game.state == Start && input.space -> Play
+  if | game.state == Start && not game.transitionedToStart && input.space -> Play
      | game.state == GameOver && input.space -> Start
      | game.state == Play && game.playerY <= 20-gameHeight/2 -> GameOver
      | otherwise -> game.state

@@ -3148,17 +3148,19 @@ Elm.Main.make = function (_elm) {
    Input,
    $Keyboard.space,
    delta));
-   var Game = F5(function (a,
+   var Game = F6(function (a,
    b,
    c,
    d,
-   e) {
+   e,
+   f) {
       return {_: {}
              ,backgroundX: c
              ,foregroundX: b
              ,playerVY: e
              ,playerY: d
-             ,state: a};
+             ,state: a
+             ,transitionedToStart: f};
    });
    var GameOver = {ctor: "GameOver"};
    var Start = {ctor: "Start"};
@@ -3167,7 +3169,8 @@ Elm.Main.make = function (_elm) {
                      ,foregroundX: 0
                      ,playerVY: 0
                      ,playerY: 0
-                     ,state: Start};
+                     ,state: Start
+                     ,transitionedToStart: false};
    var Play = {ctor: "Play"};
    var updatePlayerY = F2(function (input,
    game) {
@@ -3195,7 +3198,7 @@ Elm.Main.make = function (_elm) {
    var updateState = F2(function (input,
    game) {
       return _U.eq(game.state,
-      Start) && input.space ? Play : _U.eq(game.state,
+      Start) && ($Basics.not(game.transitionedToStart) && input.space) ? Play : _U.eq(game.state,
       GameOver) && input.space ? Start : _U.eq(game.state,
       Play) && _U.cmp(game.playerY,
       20 - gameHeight / 2) < 1 ? GameOver : game.state;
@@ -3209,6 +3212,9 @@ Elm.Main.make = function (_elm) {
    var update = F2(function (input,
    game) {
       return function () {
+         var newTransitioned = _U.eq(game.state,
+         GameOver) && input.space ? true : _U.eq(game.state,
+         Start) && $Basics.not(input.space) ? false : game.transitionedToStart;
          var newVY = A2(updatePlayerVelocity,
          input,
          game);
@@ -3231,7 +3237,9 @@ Elm.Main.make = function (_elm) {
                             ,newBackgroundX]
                            ,["playerY",newPlayerY]
                            ,["state",newState]
-                           ,["playerVY",newVY]],
+                           ,["playerVY",newVY]
+                           ,["transitionedToStart"
+                            ,newTransitioned]],
          newGame);
       }();
    });
@@ -3270,7 +3278,7 @@ Elm.Main.make = function (_elm) {
                               35,
                               "/images/plane.gif")))])));}
             _U.badCase($moduleName,
-            "between lines 101 and 110");
+            "between lines 108 and 117");
          }();
       }();
    });
