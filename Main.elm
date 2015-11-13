@@ -16,6 +16,8 @@ constants =
   { backgroundScrollV = 40
   , foregroundScrollV = 80
   , playerX = 100 - gameWidth / 2
+  , jumpSpeed = 350.0
+  , gravity = 1500.0
   }
 
 type alias Game =
@@ -23,6 +25,7 @@ type alias Game =
   , foregroundX : Float
   , backgroundX : Float
   , playerY : Float
+  , playerVY : Float
   }
 
 defaultGame : Game
@@ -31,6 +34,7 @@ defaultGame =
   , foregroundX = 0
   , backgroundX = 0
   , playerY = 0
+  , playerVY = 0
   }
 
 type alias Input =
@@ -44,39 +48,50 @@ update  input game =
   let
     newGame =
       Debug.watch "game" game
+    debugInput =
+      Debug.watch "input" input
     newPlayerY =
       updatePlayerY input game
     newBackgroundX =
-      updateBackground input.delta game.backgroundX
+        updateBackground input game
     newState =
       updateState input game
+    newVY =
+      updatePlayerVelocity input game
   in
     {newGame |
         -- foregroundX <- game.foregroundX + input.delta * constants.backgroundScrollV
         backgroundX <- newBackgroundX
     ,   playerY     <- newPlayerY
     ,   state       <- newState
+    ,   playerVY    <- newVY
     }
 
 updatePlayerY : Input -> Game -> Float
 updatePlayerY input game =
-  case game.state of
-    Start -> game.playerY + (sin (game.backgroundX / 10))
-    GameOver -> game.playerY
-    Play     -> game.playerY
+  if | game.state == Start -> game.playerY + (sin (game.backgroundX / 10))
+     | game.state == GameOver && input.space -> 0
+     | game.state == Play -> game.playerY + game.playerVY * input.delta
+     | otherwise -> game.playerY
+
+updatePlayerVelocity : Input -> Game -> Float
+updatePlayerVelocity input game =
+  if | game.state == GameOver -> 0
+     | input.space -> constants.jumpSpeed
+     | otherwise -> game.playerVY - input.delta * constants.gravity
 
 updateState : Input -> Game -> State
 updateState input game =
   if | game.state == Start && input.space -> Play
      | game.state == GameOver && input.space -> Start
+     | game.state == Play && game.playerY <= 20-gameHeight/2 -> GameOver
      | otherwise -> game.state
 
-updateBackground : Time -> Float -> Float
-updateBackground delta currentBackgroundX =
-  if currentBackgroundX > gameWidth
-    then 0
-  else
-    currentBackgroundX + delta * constants.backgroundScrollV
+updateBackground : Input -> Game -> Float
+updateBackground input game =
+  if | game.backgroundX > gameWidth -> 0
+     | game.state == GameOver -> game.backgroundX
+     | otherwise -> game.backgroundX + input.delta * constants.backgroundScrollV
 
 -- VIEW
 view : (Int,Int) -> Game -> Element
@@ -105,7 +120,7 @@ gameState =
     Signal.foldp update defaultGame input
 
 delta =
-      Signal.map inSeconds (fps 35)
+      Signal.map inSeconds (fps 60)
 
 
 input : Signal Input

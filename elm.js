@@ -3138,22 +3138,7 @@ Elm.Main.make = function (_elm) {
    $Window = Elm.Window.make(_elm);
    var delta = A2($Signal.map,
    $Time.inSeconds,
-   $Time.fps(35));
-   var updatePlayerY = F2(function (input,
-   game) {
-      return function () {
-         var _v0 = game.state;
-         switch (_v0.ctor)
-         {case "GameOver":
-            return game.playerY;
-            case "Play":
-            return game.playerY;
-            case "Start":
-            return game.playerY + $Basics.sin(game.backgroundX / 10);}
-         _U.badCase($moduleName,
-         "between lines 63 and 66");
-      }();
-   });
+   $Time.fps(60));
    var Input = F2(function (a,b) {
       return {_: {}
              ,delta: b
@@ -3163,13 +3148,15 @@ Elm.Main.make = function (_elm) {
    Input,
    $Keyboard.space,
    delta));
-   var Game = F4(function (a,
+   var Game = F5(function (a,
    b,
    c,
-   d) {
+   d,
+   e) {
       return {_: {}
              ,backgroundX: c
              ,foregroundX: b
+             ,playerVY: e
              ,playerY: d
              ,state: a};
    });
@@ -3178,14 +3165,16 @@ Elm.Main.make = function (_elm) {
    var defaultGame = {_: {}
                      ,backgroundX: 0
                      ,foregroundX: 0
+                     ,playerVY: 0
                      ,playerY: 0
                      ,state: Start};
    var Play = {ctor: "Play"};
-   var updateState = F2(function (input,
+   var updatePlayerY = F2(function (input,
    game) {
       return _U.eq(game.state,
-      Start) && input.space ? Play : _U.eq(game.state,
-      GameOver) && input.space ? Start : game.state;
+      Start) ? game.playerY + $Basics.sin(game.backgroundX / 10) : _U.eq(game.state,
+      GameOver) && input.space ? 0 : _U.eq(game.state,
+      Play) ? game.playerY + game.playerVY * input.delta : game.playerY;
    });
    var $ = {ctor: "_Tuple2"
            ,_0: 800
@@ -3195,31 +3184,54 @@ Elm.Main.make = function (_elm) {
    var constants = {_: {}
                    ,backgroundScrollV: 40
                    ,foregroundScrollV: 80
+                   ,gravity: 1500.0
+                   ,jumpSpeed: 350.0
                    ,playerX: 100 - gameWidth / 2};
-   var updateBackground = F2(function (delta,
-   currentBackgroundX) {
-      return _U.cmp(currentBackgroundX,
-      gameWidth) > 0 ? 0 : currentBackgroundX + delta * constants.backgroundScrollV;
+   var updatePlayerVelocity = F2(function (input,
+   game) {
+      return _U.eq(game.state,
+      GameOver) ? 0 : input.space ? constants.jumpSpeed : game.playerVY - input.delta * constants.gravity;
+   });
+   var updateState = F2(function (input,
+   game) {
+      return _U.eq(game.state,
+      Start) && input.space ? Play : _U.eq(game.state,
+      GameOver) && input.space ? Start : _U.eq(game.state,
+      Play) && _U.cmp(game.playerY,
+      20 - gameHeight / 2) < 1 ? GameOver : game.state;
+   });
+   var updateBackground = F2(function (input,
+   game) {
+      return _U.cmp(game.backgroundX,
+      gameWidth) > 0 ? 0 : _U.eq(game.state,
+      GameOver) ? game.backgroundX : game.backgroundX + input.delta * constants.backgroundScrollV;
    });
    var update = F2(function (input,
    game) {
       return function () {
+         var newVY = A2(updatePlayerVelocity,
+         input,
+         game);
          var newState = A2(updateState,
          input,
          game);
          var newBackgroundX = A2(updateBackground,
-         input.delta,
-         game.backgroundX);
+         input,
+         game);
          var newPlayerY = A2(updatePlayerY,
          input,
          game);
+         var debugInput = A2($Debug.watch,
+         "input",
+         input);
          var newGame = A2($Debug.watch,
          "game",
          game);
          return _U.replace([["backgroundX"
                             ,newBackgroundX]
                            ,["playerY",newPlayerY]
-                           ,["state",newState]],
+                           ,["state",newState]
+                           ,["playerVY",newVY]],
          newGame);
       }();
    });
@@ -3227,38 +3239,38 @@ Elm.Main.make = function (_elm) {
    update,
    defaultGame,
    input);
-   var view = F2(function (_v1,
-   _v2) {
+   var view = F2(function (_v0,
+   _v1) {
       return function () {
          return function () {
-            switch (_v1.ctor)
+            switch (_v0.ctor)
             {case "_Tuple2":
                return A3($Graphics$Element.container,
-                 _v1._0,
-                 _v1._1,
+                 _v0._0,
+                 _v0._1,
                  $Graphics$Element.middle)(A3($Graphics$Collage.collage,
                  gameWidth,
                  gameHeight,
                  _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
-                                                      ,_0: 0 - _v2.backgroundX
+                                                      ,_0: 0 - _v1.backgroundX
                                                       ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
                               gameWidth,
                               gameHeight,
                               "/images/background.png")))
                               ,$Graphics$Collage.move({ctor: "_Tuple2"
-                                                      ,_0: gameWidth - _v2.backgroundX
+                                                      ,_0: gameWidth - _v1.backgroundX
                                                       ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
                               gameWidth,
                               gameHeight,
                               "/images/background.png")))
                               ,$Graphics$Collage.move({ctor: "_Tuple2"
                                                       ,_0: constants.playerX
-                                                      ,_1: _v2.playerY})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                                      ,_1: _v1.playerY})($Graphics$Collage.toForm(A3($Graphics$Element.image,
                               60,
                               35,
                               "/images/plane.gif")))])));}
             _U.badCase($moduleName,
-            "between lines 86 and 95");
+            "between lines 101 and 110");
          }();
       }();
    });
@@ -3278,6 +3290,7 @@ Elm.Main.make = function (_elm) {
                       ,Input: Input
                       ,update: update
                       ,updatePlayerY: updatePlayerY
+                      ,updatePlayerVelocity: updatePlayerVelocity
                       ,updateState: updateState
                       ,updateBackground: updateBackground
                       ,view: view
