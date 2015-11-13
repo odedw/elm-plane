@@ -102,18 +102,26 @@ updateBackground input game =
 
 -- VIEW
 view : (Int,Int) -> Game -> Element
-view (w,h) {state, foregroundX, backgroundX, playerY} =
-  -- let
-  -- in
+view (w,h) game =
+  let
+    gameOverAlpha =
+      if game.state == GameOver then 1 else 0
+    getReadyAlpha =
+      if game.state == Start then 1 else 0
+  in
     container w h middle <|
     collage gameWidth gameHeight
      [
         toForm (image gameWidth gameHeight "/images/background.png")
-          |> move (-backgroundX, 0)
+          |> move (-game.backgroundX, 0)
      ,  toForm (image gameWidth gameHeight "/images/background.png")
-          |> move (gameWidth - backgroundX, 0)
+          |> move (gameWidth - game.backgroundX, 0)
      ,  toForm (image 60 35 "/images/plane.gif")
-         |> move (constants.playerX, playerY)
+         |> move (constants.playerX, game.playerY)
+     ,  toForm (image 400 70 "/images/textGameOver.png")
+         |> alpha gameOverAlpha
+     ,  toForm (image 400 70 "/images/textGetReady.png")
+             |> alpha getReadyAlpha
      ]
 
 -- SIGNALS

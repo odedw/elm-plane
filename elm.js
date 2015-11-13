@@ -3248,38 +3248,50 @@ Elm.Main.make = function (_elm) {
    defaultGame,
    input);
    var view = F2(function (_v0,
-   _v1) {
+   game) {
       return function () {
-         return function () {
-            switch (_v0.ctor)
-            {case "_Tuple2":
-               return A3($Graphics$Element.container,
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return function () {
+                 var getReadyAlpha = _U.eq(game.state,
+                 Start) ? 1 : 0;
+                 var gameOverAlpha = _U.eq(game.state,
+                 GameOver) ? 1 : 0;
+                 return A3($Graphics$Element.container,
                  _v0._0,
                  _v0._1,
                  $Graphics$Element.middle)(A3($Graphics$Collage.collage,
                  gameWidth,
                  gameHeight,
                  _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
-                                                      ,_0: 0 - _v1.backgroundX
+                                                      ,_0: 0 - game.backgroundX
                                                       ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
                               gameWidth,
                               gameHeight,
                               "/images/background.png")))
                               ,$Graphics$Collage.move({ctor: "_Tuple2"
-                                                      ,_0: gameWidth - _v1.backgroundX
+                                                      ,_0: gameWidth - game.backgroundX
                                                       ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
                               gameWidth,
                               gameHeight,
                               "/images/background.png")))
                               ,$Graphics$Collage.move({ctor: "_Tuple2"
                                                       ,_0: constants.playerX
-                                                      ,_1: _v1.playerY})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                                      ,_1: game.playerY})($Graphics$Collage.toForm(A3($Graphics$Element.image,
                               60,
                               35,
-                              "/images/plane.gif")))])));}
-            _U.badCase($moduleName,
-            "between lines 108 and 117");
-         }();
+                              "/images/plane.gif")))
+                              ,$Graphics$Collage.alpha(gameOverAlpha)($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                              400,
+                              70,
+                              "/images/textGameOver.png")))
+                              ,$Graphics$Collage.alpha(getReadyAlpha)($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                              400,
+                              70,
+                              "/images/textGetReady.png")))])));
+              }();}
+         _U.badCase($moduleName,
+         "between lines 106 and 125");
       }();
    });
    var main = A3($Signal.map2,
