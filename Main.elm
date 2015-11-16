@@ -12,6 +12,19 @@ import Debug
 
 type State = Play | Start | GameOver
 
+type alias Game =
+  { state : State
+  , foregroundX : Float
+  , backgroundX : Float
+  , y : Float
+  , vy : Float
+  }
+
+type alias KeyUpdate =
+  Bool -> Game -> Game
+
+type alias TimeUpdate =
+  Time -> Game -> Game
 constants =
   { backgroundScrollV = 40
   , foregroundScrollV = 80
@@ -20,21 +33,14 @@ constants =
   , gravity = 1500.0
   }
 
-type alias Game =
-  { state : State
-  , foregroundX : Float
-  , backgroundX : Float
-  , playerY : Float
-  , playerVY : Float
-  }
 
 defaultGame : Game
 defaultGame =
   { state = Start
   , foregroundX = 0
   , backgroundX = 0
-  , playerY = 0
-  , playerVY = 0
+  , y = 0
+  , vy = 0
   }
 
 -- UPDATE
@@ -46,52 +52,81 @@ update input game =
   in
     case input of
       TimeDelta delta ->
-        {game |
-          playerY     <- updatePlayerY delta game
-        , backgroundX <- updateBackground delta game
-        , playerVY    <- applyPhysics delta game
-        , state       <- checkFailState delta game
-        }
+        --TODO: can I pass the delta somehow as well?
+        game
+          |> updatePlayerY delta
+          |> updateBackground delta
+          |> applyPhysics delta
+          |> checkFailState delta
       Space space ->
-        {game |
-          state     <-  transitionState space game
-        , playerVY  <-  updatePlayerVelocity space game
-        }
+        game
+          |> transitionState space
+          |> updatePlayerVelocity space
 
 --Time updates
-updatePlayerY : Time -> Game -> Float
+updatePlayerY : TimeUpdate
 updatePlayerY delta game =
-  if | game.state == Start -> game.playerY + (sin (game.backgroundX / 10))
-     | game.state == Play -> game.playerY + game.playerVY * delta
-     | otherwise -> game.playerY
+  let
+    y =
+      if | game.state == Start -> game.y + (sin (game.backgroundX / 10))
+         | game.state == Play -> game.y + game.vy * delta
+         | otherwise -> game.y
+  in
+    {game | y <- y}
 
-checkFailState : Time -> Game -> State
+checkFailState : TimeUpdate
 checkFailState delta game =
-  if game.state == Play && game.playerY <= -gameHeight/2 then GameOver
-  else game.state
+  let
+    state =
+      if game.state == Play && game.y <= -gameHeight/2 then GameOver
+      else game.state
+  in
+    {game | state <- state}
 
-updateBackground : Time -> Game -> Float
+updateBackground : TimeUpdate
 updateBackground delta game =
-  if | game.backgroundX > gameWidth -> 0
-     | game.state == GameOver -> game.backgroundX
-     | otherwise -> game.backgroundX + delta * constants.backgroundScrollV
+  let
+    bx =
+      if | game.backgroundX > gameWidth -> 0
+         | game.state == GameOver -> game.backgroundX
+         | otherwise -> game.backgroundX + delta * constants.backgroundScrollV
+  in
+    {game | backgroundX <- bx}
 
-applyPhysics : Time -> Game -> Float
+applyPhysics : TimeUpdate
 applyPhysics delta game =
-  if | game.state == GameOver -> 0
-     | otherwise -> game.playerVY - delta * constants.gravity
+  let
+    vy =
+      if | game.state == GameOver -> 0
+         | otherwise -> game.vy - delta * constants.gravity
+  in
+    {game | vy <- vy}
 
 --Input updates
-transitionState : Bool -> Game -> State
+transitionState : KeyUpdate
 transitionState space game =
+  let
+    state =
       if | game.state == Start && space -> Play
          | game.state == GameOver && space -> Start
          | otherwise -> game.state
+    y =
+      if game.state == GameOver && state == Start then 0
+      else game.y
+  in
+    {game |
+      state <- state
+    , y     <- y
+    }
 
-updatePlayerVelocity : Bool -> Game -> Float
+updatePlayerVelocity : KeyUpdate
 updatePlayerVelocity space game =
-  if space then constants.jumpSpeed
-  else game.playerVY
+  let
+    vy =
+      if space then constants.jumpSpeed
+      else game.vy
+  in
+    {game | vy <- vy}
 
 -- VIEW
 view : (Int,Int) -> Game -> Element
@@ -110,7 +145,7 @@ view (w,h) game =
      ,  toForm (image gameWidth gameHeight "/images/background.png")
           |> move (gameWidth - game.backgroundX, 0)
      ,  toForm (image 60 35 "/images/plane.gif")
-         |> move (constants.playerX, game.playerY)
+         |> move (constants.playerX, game.y)
      ,  toForm (image 400 70 "/images/textGameOver.png")
          |> alpha gameOverAlpha
      ,  toForm (image 400 70 "/images/textGetReady.png")
@@ -130,11 +165,8 @@ gameState : Signal Game
 gameState =
     Signal.foldp update defaultGame input
 
-
 delta =
-      Signal.map inSeconds (fps 60)
-
-
+      Signal.map inSeconds (fps 45)
 
 input : Signal Input
 input =
