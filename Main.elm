@@ -6,8 +6,6 @@ import Time exposing (..)
 import Window
 import Debug
 
--- MODEL
-
 (gameWidth,gameHeight) = (800,480)
 
 type State = Play | Start | GameOver
@@ -25,6 +23,7 @@ type alias KeyUpdate =
 
 type alias TimeUpdate =
   Time -> Game -> Game
+
 constants =
   { backgroundScrollV = 40
   , foregroundScrollV = 80
@@ -33,7 +32,7 @@ constants =
   , gravity = 1500.0
   }
 
-
+-- MODEL
 defaultGame : Game
 defaultGame =
   { state = Start
@@ -66,41 +65,33 @@ update input game =
 --Time updates
 updatePlayerY : TimeUpdate
 updatePlayerY delta game =
-  let
-    y =
-      if | game.state == Start -> game.y + (sin (game.backgroundX / 10))
-         | game.state == Play -> game.y + game.vy * delta
-         | otherwise -> game.y
-  in
-    {game | y <- y}
+  {game | y <-
+    if | game.state == Start -> game.y + (sin (game.backgroundX / 10))
+       | game.state == Play -> game.y + game.vy * delta
+       | otherwise -> game.y
+  }
 
 checkFailState : TimeUpdate
 checkFailState delta game =
-  let
-    state =
-      if game.state == Play && game.y <= -gameHeight/2 then GameOver
-      else game.state
-  in
-    {game | state <- state}
+  {game | state <-
+    if game.state == Play && game.y <= -gameHeight/2 then GameOver
+    else game.state
+  }
 
 updateBackground : TimeUpdate
 updateBackground delta game =
-  let
-    bx =
-      if | game.backgroundX > gameWidth -> 0
-         | game.state == GameOver -> game.backgroundX
-         | otherwise -> game.backgroundX + delta * constants.backgroundScrollV
-  in
-    {game | backgroundX <- bx}
+  {game | backgroundX <-
+    if | game.backgroundX > gameWidth -> 0
+       | game.state == GameOver -> game.backgroundX
+       | otherwise -> game.backgroundX + delta * constants.backgroundScrollV
+  }
 
 applyPhysics : TimeUpdate
 applyPhysics delta game =
-  let
-    vy =
-      if | game.state == GameOver -> 0
-         | otherwise -> game.vy - delta * constants.gravity
-  in
-    {game | vy <- vy}
+  {game | vy <-
+    if | game.state == GameOver -> 0
+       | otherwise -> game.vy - delta * constants.gravity
+  }
 
 --Input updates
 transitionState : KeyUpdate
@@ -121,12 +112,10 @@ transitionState space game =
 
 updatePlayerVelocity : KeyUpdate
 updatePlayerVelocity space game =
-  let
-    vy =
-      if space then constants.jumpSpeed
-      else game.vy
-  in
-    {game | vy <- vy}
+  {game | vy <-
+    if space then constants.jumpSpeed
+    else game.vy
+  }
 
 -- VIEW
 view : (Int,Int) -> Game -> Element

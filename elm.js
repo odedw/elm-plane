@@ -3175,13 +3175,11 @@ Elm.Main.make = function (_elm) {
    var Play = {ctor: "Play"};
    var updatePlayerY = F2(function (delta,
    game) {
-      return function () {
-         var y = _U.eq(game.state,
-         Start) ? game.y + $Basics.sin(game.backgroundX / 10) : _U.eq(game.state,
-         Play) ? game.y + game.vy * delta : game.y;
-         return _U.replace([["y",y]],
-         game);
-      }();
+      return _U.replace([["y"
+                         ,_U.eq(game.state,
+                         Start) ? game.y + $Basics.sin(game.backgroundX / 10) : _U.eq(game.state,
+                         Play) ? game.y + game.vy * delta : game.y]],
+      game);
    });
    var transitionState = F2(function (space,
    game) {
@@ -3211,42 +3209,32 @@ Elm.Main.make = function (_elm) {
                    ,playerX: 100 - gameWidth / 2};
    var applyPhysics = F2(function (delta,
    game) {
-      return function () {
-         var vy = _U.eq(game.state,
-         GameOver) ? 0 : game.vy - delta * constants.gravity;
-         return _U.replace([["vy",vy]],
-         game);
-      }();
+      return _U.replace([["vy"
+                         ,_U.eq(game.state,
+                         GameOver) ? 0 : game.vy - delta * constants.gravity]],
+      game);
    });
    var updatePlayerVelocity = F2(function (space,
    game) {
-      return function () {
-         var vy = space ? constants.jumpSpeed : game.vy;
-         return _U.replace([["vy",vy]],
-         game);
-      }();
+      return _U.replace([["vy"
+                         ,space ? constants.jumpSpeed : game.vy]],
+      game);
    });
    var checkFailState = F2(function (delta,
    game) {
-      return function () {
-         var state = _U.eq(game.state,
-         Play) && _U.cmp(game.y,
-         (0 - gameHeight) / 2) < 1 ? GameOver : game.state;
-         return _U.replace([["state"
-                            ,state]],
-         game);
-      }();
+      return _U.replace([["state"
+                         ,_U.eq(game.state,
+                         Play) && _U.cmp(game.y,
+                         (0 - gameHeight) / 2) < 1 ? GameOver : game.state]],
+      game);
    });
    var updateBackground = F2(function (delta,
    game) {
-      return function () {
-         var bx = _U.cmp(game.backgroundX,
-         gameWidth) > 0 ? 0 : _U.eq(game.state,
-         GameOver) ? game.backgroundX : game.backgroundX + delta * constants.backgroundScrollV;
-         return _U.replace([["backgroundX"
-                            ,bx]],
-         game);
-      }();
+      return _U.replace([["backgroundX"
+                         ,_U.cmp(game.backgroundX,
+                         gameWidth) > 0 ? 0 : _U.eq(game.state,
+                         GameOver) ? game.backgroundX : game.backgroundX + delta * constants.backgroundScrollV]],
+      game);
    });
    var update = F2(function (input,
    game) {
@@ -3261,7 +3249,7 @@ Elm.Main.make = function (_elm) {
                case "TimeDelta":
                return checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game))));}
             _U.badCase($moduleName,
-            "between lines 53 and 64");
+            "between lines 52 and 63");
          }();
       }();
    });
@@ -3313,7 +3301,7 @@ Elm.Main.make = function (_elm) {
                               "/images/textGetReady.png")))])));
               }();}
          _U.badCase($moduleName,
-         "between lines 134 and 153");
+         "between lines 123 and 142");
       }();
    });
    var main = A3($Signal.map2,
