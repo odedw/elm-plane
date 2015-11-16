@@ -3139,28 +3139,30 @@ Elm.Main.make = function (_elm) {
    var delta = A2($Signal.map,
    $Time.inSeconds,
    $Time.fps(60));
-   var Input = F2(function (a,b) {
-      return {_: {}
-             ,delta: b
-             ,space: a};
-   });
-   var input = $Signal.sampleOn(delta)(A3($Signal.map2,
-   Input,
-   $Keyboard.space,
-   delta));
-   var Game = F6(function (a,
+   var Space = function (a) {
+      return {ctor: "Space",_0: a};
+   };
+   var TimeDelta = function (a) {
+      return {ctor: "TimeDelta"
+             ,_0: a};
+   };
+   var input = $Signal.mergeMany(_L.fromArray([A2($Signal.map,
+                                              TimeDelta,
+                                              delta)
+                                              ,A2($Signal.map,
+                                              Space,
+                                              $Keyboard.space)]));
+   var Game = F5(function (a,
    b,
    c,
    d,
-   e,
-   f) {
+   e) {
       return {_: {}
              ,backgroundX: c
              ,foregroundX: b
              ,playerVY: e
              ,playerY: d
-             ,state: a
-             ,transitionedToStart: f};
+             ,state: a};
    });
    var GameOver = {ctor: "GameOver"};
    var Start = {ctor: "Start"};
@@ -3169,15 +3171,19 @@ Elm.Main.make = function (_elm) {
                      ,foregroundX: 0
                      ,playerVY: 0
                      ,playerY: 0
-                     ,state: Start
-                     ,transitionedToStart: false};
+                     ,state: Start};
    var Play = {ctor: "Play"};
-   var updatePlayerY = F2(function (input,
+   var updatePlayerY = F2(function (delta,
    game) {
       return _U.eq(game.state,
       Start) ? game.playerY + $Basics.sin(game.backgroundX / 10) : _U.eq(game.state,
-      GameOver) && input.space ? 0 : _U.eq(game.state,
-      Play) ? game.playerY + game.playerVY * input.delta : game.playerY;
+      Play) ? game.playerY + game.playerVY * delta : game.playerY;
+   });
+   var transitionState = F2(function (space,
+   game) {
+      return _U.eq(game.state,
+      Start) && space ? Play : _U.eq(game.state,
+      GameOver) && space ? Start : game.state;
    });
    var $ = {ctor: "_Tuple2"
            ,_0: 800
@@ -3190,67 +3196,74 @@ Elm.Main.make = function (_elm) {
                    ,gravity: 1500.0
                    ,jumpSpeed: 350.0
                    ,playerX: 100 - gameWidth / 2};
-   var updatePlayerVelocity = F2(function (input,
+   var applyPhysics = F2(function (delta,
    game) {
       return _U.eq(game.state,
-      GameOver) ? 0 : input.space ? constants.jumpSpeed : game.playerVY - input.delta * constants.gravity;
+      GameOver) ? 0 : game.playerVY - delta * constants.gravity;
    });
-   var updateState = F2(function (input,
+   var updatePlayerVelocity = F2(function (space,
+   game) {
+      return space ? constants.jumpSpeed : game.playerVY;
+   });
+   var checkFailState = F2(function (delta,
    game) {
       return _U.eq(game.state,
-      Start) && ($Basics.not(game.transitionedToStart) && input.space) ? Play : _U.eq(game.state,
-      GameOver) && input.space ? Start : _U.eq(game.state,
       Play) && _U.cmp(game.playerY,
-      20 - gameHeight / 2) < 1 ? GameOver : game.state;
+      (0 - gameHeight) / 2) < 1 ? GameOver : game.state;
    });
-   var updateBackground = F2(function (input,
+   var updateBackground = F2(function (delta,
    game) {
       return _U.cmp(game.backgroundX,
       gameWidth) > 0 ? 0 : _U.eq(game.state,
-      GameOver) ? game.backgroundX : game.backgroundX + input.delta * constants.backgroundScrollV;
+      GameOver) ? game.backgroundX : game.backgroundX + delta * constants.backgroundScrollV;
    });
    var update = F2(function (input,
    game) {
       return function () {
-         var newTransitioned = _U.eq(game.state,
-         GameOver) && input.space ? true : _U.eq(game.state,
-         Start) && $Basics.not(input.space) ? false : game.transitionedToStart;
-         var newVY = A2(updatePlayerVelocity,
-         input,
-         game);
-         var newState = A2(updateState,
-         input,
-         game);
-         var newBackgroundX = A2(updateBackground,
-         input,
-         game);
-         var newPlayerY = A2(updatePlayerY,
-         input,
-         game);
-         var debugInput = A2($Debug.watch,
-         "input",
-         input);
          var newGame = A2($Debug.watch,
          "game",
          game);
-         return _U.replace([["backgroundX"
-                            ,newBackgroundX]
-                           ,["playerY",newPlayerY]
-                           ,["state",newState]
-                           ,["playerVY",newVY]
-                           ,["transitionedToStart"
-                            ,newTransitioned]],
-         newGame);
+         return function () {
+            switch (input.ctor)
+            {case "Space":
+               return _U.replace([["state"
+                                  ,A2(transitionState,
+                                  input._0,
+                                  game)]
+                                 ,["playerVY"
+                                  ,A2(updatePlayerVelocity,
+                                  input._0,
+                                  game)]],
+                 game);
+               case "TimeDelta":
+               return _U.replace([["playerY"
+                                  ,A2(updatePlayerY,
+                                  input._0,
+                                  game)]
+                                 ,["backgroundX"
+                                  ,A2(updateBackground,
+                                  input._0,
+                                  game)]
+                                 ,["playerVY"
+                                  ,A2(applyPhysics,input._0,game)]
+                                 ,["state"
+                                  ,A2(checkFailState,
+                                  input._0,
+                                  game)]],
+                 game);}
+            _U.badCase($moduleName,
+            "between lines 47 and 59");
+         }();
       }();
    });
    var gameState = A3($Signal.foldp,
    update,
    defaultGame,
    input);
-   var view = F2(function (_v0,
+   var view = F2(function (_v3,
    game) {
       return function () {
-         switch (_v0.ctor)
+         switch (_v3.ctor)
          {case "_Tuple2":
             return function () {
                  var getReadyAlpha = _U.eq(game.state,
@@ -3258,8 +3271,8 @@ Elm.Main.make = function (_elm) {
                  var gameOverAlpha = _U.eq(game.state,
                  GameOver) ? 1 : 0;
                  return A3($Graphics$Element.container,
-                 _v0._0,
-                 _v0._1,
+                 _v3._0,
+                 _v3._1,
                  $Graphics$Element.middle)(A3($Graphics$Collage.collage,
                  gameWidth,
                  gameHeight,
@@ -3291,7 +3304,7 @@ Elm.Main.make = function (_elm) {
                               "/images/textGetReady.png")))])));
               }();}
          _U.badCase($moduleName,
-         "between lines 106 and 125");
+         "between lines 99 and 118");
       }();
    });
    var main = A3($Signal.map2,
@@ -3307,13 +3320,16 @@ Elm.Main.make = function (_elm) {
                       ,constants: constants
                       ,Game: Game
                       ,defaultGame: defaultGame
-                      ,Input: Input
                       ,update: update
                       ,updatePlayerY: updatePlayerY
-                      ,updatePlayerVelocity: updatePlayerVelocity
-                      ,updateState: updateState
+                      ,checkFailState: checkFailState
                       ,updateBackground: updateBackground
+                      ,applyPhysics: applyPhysics
+                      ,transitionState: transitionState
+                      ,updatePlayerVelocity: updatePlayerVelocity
                       ,view: view
+                      ,TimeDelta: TimeDelta
+                      ,Space: Space
                       ,main: main
                       ,gameState: gameState
                       ,delta: delta

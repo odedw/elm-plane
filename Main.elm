@@ -26,7 +26,6 @@ type alias Game =
   , backgroundX : Float
   , playerY : Float
   , playerVY : Float
-  , transitionedToStart : Bool
   }
 
 defaultGame : Game
@@ -36,69 +35,63 @@ defaultGame =
   , backgroundX = 0
   , playerY = 0
   , playerVY = 0
-  , transitionedToStart = False
   }
-
-type alias Input =
-    { space : Bool
-    , delta : Time
-    }
 
 -- UPDATE
 update : Input -> Game -> Game
-update  input game =
+update input game =
   let
     newGame =
       Debug.watch "game" game
-    debugInput =
-      Debug.watch "input" input
-    newPlayerY =
-      updatePlayerY input game
-    newBackgroundX =
-        updateBackground input game
-    newState =
-      updateState input game
-    newVY =
-      updatePlayerVelocity input game
-    newTransitioned =
-      if | game.state == GameOver && input.space -> True
-         | game.state == Start && not input.space -> False
-         | otherwise -> game.transitionedToStart
   in
-    {newGame |
-        -- foregroundX <- game.foregroundX + input.delta * constants.backgroundScrollV
-        backgroundX <- newBackgroundX
-    ,   playerY     <- newPlayerY
-    ,   state       <- newState
-    ,   playerVY    <- newVY
-    ,   transitionedToStart <- newTransitioned
-    }
+    case input of
+      TimeDelta delta ->
+        {game |
+          playerY     <- updatePlayerY delta game
+        , backgroundX <- updateBackground delta game
+        , playerVY    <- applyPhysics delta game
+        , state       <- checkFailState delta game
+        }
+      Space space ->
+        {game |
+          state     <-  transitionState space game
+        , playerVY  <-  updatePlayerVelocity space game
+        }
 
-updatePlayerY : Input -> Game -> Float
-updatePlayerY input game =
+--Time updates
+updatePlayerY : Time -> Game -> Float
+updatePlayerY delta game =
   if | game.state == Start -> game.playerY + (sin (game.backgroundX / 10))
-     | game.state == GameOver && input.space -> 0
-     | game.state == Play -> game.playerY + game.playerVY * input.delta
+     | game.state == Play -> game.playerY + game.playerVY * delta
      | otherwise -> game.playerY
 
-updatePlayerVelocity : Input -> Game -> Float
-updatePlayerVelocity input game =
-  if | game.state == GameOver -> 0
-     | input.space -> constants.jumpSpeed
-     | otherwise -> game.playerVY - input.delta * constants.gravity
+checkFailState : Time -> Game -> State
+checkFailState delta game =
+  if game.state == Play && game.playerY <= -gameHeight/2 then GameOver
+  else game.state
 
-updateState : Input -> Game -> State
-updateState input game =
-  if | game.state == Start && not game.transitionedToStart && input.space -> Play
-     | game.state == GameOver && input.space -> Start
-     | game.state == Play && game.playerY <= 20-gameHeight/2 -> GameOver
-     | otherwise -> game.state
-
-updateBackground : Input -> Game -> Float
-updateBackground input game =
+updateBackground : Time -> Game -> Float
+updateBackground delta game =
   if | game.backgroundX > gameWidth -> 0
      | game.state == GameOver -> game.backgroundX
-     | otherwise -> game.backgroundX + input.delta * constants.backgroundScrollV
+     | otherwise -> game.backgroundX + delta * constants.backgroundScrollV
+
+applyPhysics : Time -> Game -> Float
+applyPhysics delta game =
+  if | game.state == GameOver -> 0
+     | otherwise -> game.playerVY - delta * constants.gravity
+
+--Input updates
+transitionState : Bool -> Game -> State
+transitionState space game =
+      if | game.state == Start && space -> Play
+         | game.state == GameOver && space -> Start
+         | otherwise -> game.state
+
+updatePlayerVelocity : Bool -> Game -> Float
+updatePlayerVelocity space game =
+  if space then constants.jumpSpeed
+  else game.playerVY
 
 -- VIEW
 view : (Int,Int) -> Game -> Element
@@ -125,6 +118,9 @@ view (w,h) game =
      ]
 
 -- SIGNALS
+type Input =
+    TimeDelta Time
+  | Space Bool
 
 main =
   Signal.map2 view Window.dimensions gameState
@@ -134,13 +130,12 @@ gameState : Signal Game
 gameState =
     Signal.foldp update defaultGame input
 
+
 delta =
       Signal.map inSeconds (fps 60)
 
 
+
 input : Signal Input
 input =
-        Signal.sampleOn delta <|
-          Signal.map2 Input
-          Keyboard.space
-          delta
+        Signal.mergeMany [Signal.map TimeDelta delta, Signal.map Space Keyboard.space]
