@@ -3152,26 +3152,22 @@ Elm.Main.make = function (_elm) {
                                               ,A2($Signal.map,
                                               Space,
                                               $Keyboard.space)]));
-   var Game = F5(function (a,
+   var Game = F6(function (a,
    b,
    c,
    d,
-   e) {
+   e,
+   f) {
       return {_: {}
              ,backgroundX: c
              ,foregroundX: b
              ,state: a
+             ,timeToColumn: f
              ,vy: e
              ,y: d};
    });
    var GameOver = {ctor: "GameOver"};
    var Start = {ctor: "Start"};
-   var defaultGame = {_: {}
-                     ,backgroundX: 0
-                     ,foregroundX: 0
-                     ,state: Start
-                     ,vy: 0
-                     ,y: 0};
    var Play = {ctor: "Play"};
    var updatePlayerY = F2(function (delta,
    game) {
@@ -3180,21 +3176,6 @@ Elm.Main.make = function (_elm) {
                          Start) ? game.y + $Basics.sin(game.backgroundX / 10) : _U.eq(game.state,
                          Play) ? game.y + game.vy * delta : game.y]],
       game);
-   });
-   var transitionState = F2(function (space,
-   game) {
-      return function () {
-         var state = _U.eq(game.state,
-         Start) && space ? Play : _U.eq(game.state,
-         GameOver) && space ? Start : game.state;
-         var y = _U.eq(game.state,
-         GameOver) && _U.eq(state,
-         Start) ? 0 : game.y;
-         return _U.replace([["state"
-                            ,state]
-                           ,["y",y]],
-         game);
-      }();
    });
    var $ = {ctor: "_Tuple2"
            ,_0: 800
@@ -3206,12 +3187,36 @@ Elm.Main.make = function (_elm) {
                    ,foregroundScrollV: 80
                    ,gravity: 1500.0
                    ,jumpSpeed: 350.0
-                   ,playerX: 100 - gameWidth / 2};
+                   ,playerX: 100 - gameWidth / 2
+                   ,timeBetweenColumns: 2};
+   var defaultGame = {_: {}
+                     ,backgroundX: 0
+                     ,foregroundX: 0
+                     ,state: Start
+                     ,timeToColumn: constants.timeBetweenColumns
+                     ,vy: 0
+                     ,y: 0};
+   var transitionState = F2(function (space,
+   game) {
+      return _U.eq(game.state,
+      GameOver) && space ? defaultGame : _U.replace([["state"
+                                                     ,_U.eq(game.state,
+                                                     Start) && space ? Play : game.state]],
+      game);
+   });
    var applyPhysics = F2(function (delta,
    game) {
       return _U.replace([["vy"
                          ,_U.eq(game.state,
                          GameOver) ? 0 : game.vy - delta * constants.gravity]],
+      game);
+   });
+   var updateColumns = F2(function (delta,
+   game) {
+      return _U.replace([["timeToColumn"
+                         ,_U.cmp(game.timeToColumn,
+                         0) < 1 ? constants.timeBetweenColumns : _U.eq(game.state,
+                         Play) ? game.timeToColumn - delta : game.timeToColumn]],
       game);
    });
    var updatePlayerVelocity = F2(function (space,
@@ -3247,9 +3252,9 @@ Elm.Main.make = function (_elm) {
             {case "Space":
                return updatePlayerVelocity(input._0)(transitionState(input._0)(game));
                case "TimeDelta":
-               return checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game))));}
+               return updateColumns(input._0)(checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game)))));}
             _U.badCase($moduleName,
-            "between lines 52 and 63");
+            "between lines 55 and 67");
          }();
       }();
    });
@@ -3301,7 +3306,7 @@ Elm.Main.make = function (_elm) {
                               "/images/textGetReady.png")))])));
               }();}
          _U.badCase($moduleName,
-         "between lines 123 and 142");
+         "between lines 129 and 148");
       }();
    });
    var main = A3($Signal.map2,
@@ -3322,6 +3327,7 @@ Elm.Main.make = function (_elm) {
                       ,checkFailState: checkFailState
                       ,updateBackground: updateBackground
                       ,applyPhysics: applyPhysics
+                      ,updateColumns: updateColumns
                       ,transitionState: transitionState
                       ,updatePlayerVelocity: updatePlayerVelocity
                       ,view: view

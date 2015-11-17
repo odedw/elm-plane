@@ -16,6 +16,7 @@ type alias Game =
   , backgroundX : Float
   , y : Float
   , vy : Float
+  , timeToColumn : Float
   }
 
 type alias KeyUpdate =
@@ -30,6 +31,7 @@ constants =
   , playerX = 100 - gameWidth / 2
   , jumpSpeed = 350.0
   , gravity = 1500.0
+  , timeBetweenColumns = 2
   }
 
 -- MODEL
@@ -40,6 +42,7 @@ defaultGame =
   , backgroundX = 0
   , y = 0
   , vy = 0
+  , timeToColumn = constants.timeBetweenColumns
   }
 
 -- UPDATE
@@ -57,6 +60,7 @@ update input game =
           |> updateBackground delta
           |> applyPhysics delta
           |> checkFailState delta
+          |> updateColumns delta
       Space space ->
         game
           |> transitionState space
@@ -93,21 +97,23 @@ applyPhysics delta game =
        | otherwise -> game.vy - delta * constants.gravity
   }
 
+updateColumns : TimeUpdate
+updateColumns delta game =
+    {game | timeToColumn <-
+      if | game.timeToColumn <= 0 -> constants.timeBetweenColumns
+         | game.state == Play -> game.timeToColumn - delta
+         | otherwise -> game.timeToColumn
+    }
+
 --Input updates
 transitionState : KeyUpdate
 transitionState space game =
-  let
-    state =
-      if | game.state == Start && space -> Play
-         | game.state == GameOver && space -> Start
-         | otherwise -> game.state
-    y =
-      if game.state == GameOver && state == Start then 0
-      else game.y
-  in
+  if game.state == GameOver && space then defaultGame
+  else
     {game |
-      state <- state
-    , y     <- y
+      state <-
+        if | game.state == Start && space -> Play
+           | otherwise -> game.state
     }
 
 updatePlayerVelocity : KeyUpdate
