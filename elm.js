@@ -3247,25 +3247,41 @@ Elm.Main.make = function (_elm) {
                                               ,A2($Signal.map,
                                               Space,
                                               $Keyboard.space)]));
-   var Game = F9(function (a,
+   var Game = F8(function (a,
    b,
    c,
    d,
    e,
    f,
    g,
-   h,
-   i) {
+   h) {
       return {_: {}
              ,backgroundX: c
              ,columns: g
              ,foregroundX: b
              ,randomizer: h
-             ,seed: i
              ,state: a
              ,timeToColumn: f
              ,vy: e
              ,y: d};
+   });
+   var Constants = F8(function (a,
+   b,
+   c,
+   d,
+   e,
+   f,
+   g,
+   h) {
+      return {_: {}
+             ,backgroundScrollV: a
+             ,columnGap: h
+             ,columnWidth: g
+             ,foregroundScrollV: b
+             ,gravity: e
+             ,jumpSpeed: d
+             ,playerX: c
+             ,timeBetweenColumns: f};
    });
    var Column = F3(function (a,
    b,
@@ -3318,9 +3334,8 @@ Elm.Main.make = function (_elm) {
                      ,columns: $Array.empty
                      ,foregroundX: 0
                      ,randomizer: A2($Random.$int,
-                     $Basics.round(constants.columnGap),
+                     $Basics.round(constants.columnGap) / 2 | 0,
                      gameHeight / 2 | 0)
-                     ,seed: $Random.initialSeed(0)
                      ,state: Start
                      ,timeToColumn: constants.timeBetweenColumns
                      ,vy: 0
@@ -3351,12 +3366,13 @@ Elm.Main.make = function (_elm) {
    });
    var generateColumn = F2(function (time,
    game) {
-      return {_: {}
-             ,bottomHeight: $Basics.fst(A2($Random.generate,
-             game.randomizer,
-             $Random.initialSeed($Basics.round($Time.inMilliseconds(time)))))
-             ,topHeight: 0
-             ,x: gameWidth / 2 + constants.columnWidth};
+      return function () {
+         var randomBottomHeight = $Basics.fst($Random.generate(game.randomizer)($Random.initialSeed($Basics.round($Time.inMilliseconds(time)))));
+         return {_: {}
+                ,bottomHeight: randomBottomHeight
+                ,topHeight: 0
+                ,x: gameWidth / 2 + constants.columnWidth};
+      }();
    });
    var updateColumns = F2(function (delta,
    game) {
@@ -3382,11 +3398,7 @@ Elm.Main.make = function (_elm) {
          updatedColumns) : updatedColumns;
          return _U.replace([["timeToColumn"
                             ,timeToColumn]
-                           ,["columns",columns]
-                           ,["seed"
-                            ,shouldAddColumn ? $Basics.snd(A2($Random.generate,
-                            game.randomizer,
-                            game.seed)) : game.seed]],
+                           ,["columns",columns]],
          game);
       }();
    });
@@ -3403,7 +3415,7 @@ Elm.Main.make = function (_elm) {
                case "TimeDelta":
                return updateColumns(input._0)(checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game)))));}
             _U.badCase($moduleName,
-            "between lines 71 and 83");
+            "between lines 81 and 93");
          }();
       }();
    });
@@ -3467,7 +3479,7 @@ Elm.Main.make = function (_elm) {
                  $Array.toList(columnForms))));
               }();}
          _U.badCase($moduleName,
-         "between lines 167 and 190");
+         "between lines 179 and 202");
       }();
    });
    var main = A3($Signal.map2,
@@ -3481,6 +3493,7 @@ Elm.Main.make = function (_elm) {
                       ,Start: Start
                       ,GameOver: GameOver
                       ,Column: Column
+                      ,Constants: Constants
                       ,Game: Game
                       ,constants: constants
                       ,defaultGame: defaultGame

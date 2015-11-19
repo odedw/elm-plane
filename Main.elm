@@ -18,6 +18,17 @@ type alias Column =
   , bottomHeight: Int
   , topHeight: Int
   }
+type alias Constants =
+  {
+  backgroundScrollV : Float
+  , foregroundScrollV : Float
+  , playerX : Float
+  , jumpSpeed : Float
+  , gravity : Float
+  , timeBetweenColumns : Float
+  , columnWidth : Float
+  , columnGap : Float
+  }
 type alias Game =
   { state : State
   , foregroundX : Float
@@ -27,7 +38,6 @@ type alias Game =
   , timeToColumn : Float
   , columns : Array.Array Column
   , randomizer : Generator Int
-  , seed : Seed
   }
 
 type alias KeyUpdate =
@@ -36,8 +46,10 @@ type alias KeyUpdate =
 type alias TimeUpdate =
   (Time,Time) -> Game -> Game
 
+constants : Constants
 constants =
-  { backgroundScrollV = 40
+  {
+  backgroundScrollV = 40
   , foregroundScrollV = 150
   , playerX = 100 - gameWidth / 2
   , jumpSpeed = 370.0
@@ -57,8 +69,7 @@ defaultGame =
   , vy = 0
   , timeToColumn = constants.timeBetweenColumns
   , columns = Array.empty
-  , randomizer = Random.int (round constants.columnGap) (gameHeight//2)
-  , seed = initialSeed 0
+  , randomizer = Random.int ((round constants.columnGap)//2) (gameHeight//2)
   }
 
 -- UPDATE
@@ -66,7 +77,6 @@ update : Input -> Game -> Game
 update input game =
   let
     newGame = Debug.watch "game" game
-
   in
     case input of
       TimeDelta delta ->
@@ -131,17 +141,19 @@ updateColumns delta game =
   in
     {game | timeToColumn <- timeToColumn
           , columns <- columns
-          , seed <- if shouldAddColumn then snd <| generate game.randomizer game.seed
-                    else game.seed
     }
 
 generateColumn : Time -> Game -> Column
 generateColumn time game =
-      {
-      x = gameWidth / 2 + constants.columnWidth
-      , bottomHeight = fst <| generate game.randomizer (initialSeed <| round <| inMilliseconds time)
-      , topHeight = 0
-      }
+  let
+    randomBottomHeight =
+      fst <| generate game.randomizer <| initialSeed <| round <| inMilliseconds time
+  in
+    {
+    x = gameWidth / 2 + constants.columnWidth
+    , bottomHeight = randomBottomHeight
+    , topHeight = 0
+    }
 
 --Input updates
 transitionState : KeyUpdate
