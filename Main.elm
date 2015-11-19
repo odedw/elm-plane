@@ -7,6 +7,7 @@ import Window
 import Debug
 import Array
 import List
+import Random exposing (int, generate, initialSeed, Generator, Seed)
 
 (gameWidth,gameHeight) = (800,480)
 
@@ -14,8 +15,8 @@ type State = Play | Start | GameOver
 
 type alias Column =
   { x : Float
-  , bottomHeight: Float
-  , topHeight: Float
+  , bottomHeight: Int
+  , topHeight: Int
   }
 type alias Game =
   { state : State
@@ -25,21 +26,25 @@ type alias Game =
   , vy : Float
   , timeToColumn : Float
   , columns : Array.Array Column
+  , randomizer : Generator Int
+  , seed : Seed
   }
 
 type alias KeyUpdate =
   Bool -> Game -> Game
 
 type alias TimeUpdate =
-  Time -> Game -> Game
+  (Time,Time) -> Game -> Game
 
 constants =
   { backgroundScrollV = 40
-  , foregroundScrollV = 80
+  , foregroundScrollV = 150
   , playerX = 100 - gameWidth / 2
-  , jumpSpeed = 350.0
+  , jumpSpeed = 370.0
   , gravity = 1500.0
   , timeBetweenColumns = 2
+  , columnWidth = 30
+  , columnGap = gameHeight / 7
   }
 
 -- MODEL
@@ -52,6 +57,8 @@ defaultGame =
   , vy = 0
   , timeToColumn = constants.timeBetweenColumns
   , columns = Array.empty
+  , randomizer = Random.int (round constants.columnGap) (gameHeight//2)
+  , seed = initialSeed 0
   }
 
 -- UPDATE
@@ -59,6 +66,7 @@ update : Input -> Game -> Game
 update input game =
   let
     newGame = Debug.watch "game" game
+
   in
     case input of
       TimeDelta delta ->
@@ -79,7 +87,7 @@ updatePlayerY : TimeUpdate
 updatePlayerY delta game =
   {game | y <-
     if | game.state == Start -> game.y + (sin (game.backgroundX / 10))
-       | game.state == Play -> game.y + game.vy * delta
+       | game.state == Play -> game.y + game.vy * (snd delta)
        | otherwise -> game.y
   }
 
@@ -95,14 +103,14 @@ updateBackground delta game =
   {game | backgroundX <-
     if | game.backgroundX > gameWidth -> 0
        | game.state == GameOver -> game.backgroundX
-       | otherwise -> game.backgroundX + delta * constants.backgroundScrollV
+       | otherwise -> game.backgroundX + (snd delta) * constants.backgroundScrollV
   }
 
 applyPhysics : TimeUpdate
 applyPhysics delta game =
   {game | vy <-
     if | game.state == GameOver -> 0
-       | otherwise -> game.vy - delta * constants.gravity
+       | otherwise -> game.vy - (snd delta) * constants.gravity
   }
 
 updateColumns : TimeUpdate
@@ -110,25 +118,30 @@ updateColumns delta game =
   let
     timeToColumn =
       if | game.timeToColumn <= 0 -> constants.timeBetweenColumns
-         | game.state == Play -> game.timeToColumn - delta
+         | game.state == Play -> game.timeToColumn - (snd delta)
          | otherwise -> game.timeToColumn
     shouldAddColumn = timeToColumn == constants.timeBetweenColumns && game.state == Play
     updatedColumns =
-      Array.map (\c -> {c | x <- c.x - constants.foregroundScrollV * delta}) game.columns
+      Array.map (\c -> {c | x <- c.x - constants.foregroundScrollV * (snd delta)}) game.columns
     columns =
       if | game.state /= Play -> game.columns
-         | shouldAddColumn ->
-            updatedColumns |>
-              Array.push {
-                x = gameWidth
-                , bottomHeight = 0
-                , topHeight = 0
-              }
+         | shouldAddColumn -> Array.push (generateColumn (fst delta) game) updatedColumns
          | otherwise -> updatedColumns
+
   in
     {game | timeToColumn <- timeToColumn
           , columns <- columns
+          , seed <- if shouldAddColumn then snd <| generate game.randomizer game.seed
+                    else game.seed
     }
+
+generateColumn : Time -> Game -> Column
+generateColumn time game =
+      {
+      x = gameWidth / 2 + constants.columnWidth
+      , bottomHeight = fst <| generate game.randomizer (initialSeed <| round <| inMilliseconds time)
+      , topHeight = 0
+      }
 
 --Input updates
 transitionState : KeyUpdate
@@ -157,7 +170,7 @@ view (w,h) game =
     getReadyAlpha =
       if game.state == Start then 1 else 0
     columnForms =
-      Array.map (\c -> toForm(image 108 239 "/images/rock.png") |> move (c.x, 0)) game.columns
+      Array.map (\c -> toForm(image (round constants.columnWidth) c.bottomHeight "/images/rock.png") |> move (c.x, (toFloat c.bottomHeight/2) - gameHeight/2)) game.columns
     formList =
       [
          toForm (image gameWidth gameHeight "/images/background.png")
@@ -173,12 +186,12 @@ view (w,h) game =
       ]
   in
     container w h middle <|
-    collage gameWidth gameHeight formList
-      -- (List.append (Array.toList columnForms) formList)
+    collage gameWidth gameHeight <|
+    List.append formList (Array.toList columnForms)
 
 -- SIGNALS
 type Input =
-    TimeDelta Time
+    TimeDelta (Time,Time)
   | Space Bool
 
 main =
@@ -189,7 +202,7 @@ gameState : Signal Game
 gameState =
     Signal.foldp update defaultGame input
 
-delta =
+delta = timestamp <|
       Signal.map inSeconds (fps 45)
 
 input : Signal Input
