@@ -27,7 +27,7 @@ type alias Constants =
   , gravity : Float
   , timeBetweenColumns : Float
   , columnWidth : Float
-  , columnGap : Float
+  , columnGap : Int
   }
 type alias Game =
   { state : State
@@ -56,7 +56,7 @@ constants =
   , gravity = 1500.0
   , timeBetweenColumns = 2
   , columnWidth = 30
-  , columnGap = gameHeight / 7
+  , columnGap = round (gameHeight / 7)
   }
 
 -- MODEL
@@ -69,7 +69,7 @@ defaultGame =
   , vy = 0
   , timeToColumn = constants.timeBetweenColumns
   , columns = Array.empty
-  , randomizer = Random.int ((round constants.columnGap)//2) (gameHeight//2)
+  , randomizer = Random.int (constants.columnGap//2) (gameHeight//2)
   }
 
 -- UPDATE

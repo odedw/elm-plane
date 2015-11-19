@@ -3309,7 +3309,7 @@ Elm.Main.make = function (_elm) {
    gameHeight = $._1;
    var constants = {_: {}
                    ,backgroundScrollV: 40
-                   ,columnGap: gameHeight / 7
+                   ,columnGap: $Basics.round(gameHeight / 7)
                    ,columnWidth: 30
                    ,foregroundScrollV: 150
                    ,gravity: 1500.0
@@ -3334,7 +3334,7 @@ Elm.Main.make = function (_elm) {
                      ,columns: $Array.empty
                      ,foregroundX: 0
                      ,randomizer: A2($Random.$int,
-                     $Basics.round(constants.columnGap) / 2 | 0,
+                     constants.columnGap / 2 | 0,
                      gameHeight / 2 | 0)
                      ,state: Start
                      ,timeToColumn: constants.timeBetweenColumns
