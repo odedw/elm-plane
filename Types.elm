@@ -7,7 +7,8 @@ type State = Play | Start | GameOver
 type Kind = Top | Bottom
 type alias Pillar =
   { x : Float
-  , pillarHeight: Int
+  , y : Float
+  , height: Int
   , kind : Kind
   }
 type alias Constants =
@@ -21,8 +22,10 @@ type alias Constants =
   , pillarWidth : Int
   , minPillarHeight : Int
   , planeHeight : Int
+  , planeWidth : Int
   , gapToPlaneRatio : Float
   , gapHeight : Int
+  , epsilon : Float
   }
 type alias Game =
   { state : State

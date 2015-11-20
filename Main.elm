@@ -9,6 +9,7 @@ import Array
 import List
 import Random exposing (int, generate, initialSeed, Generator, Seed)
 import Types exposing (..)
+import Utils
 
 (gameWidth,gameHeight) = (800,480)
 
@@ -29,10 +30,11 @@ constants =
     , pillarWidth = 30
     , minPillarHeight = round (gameHeight / 8)
     , planeHeight = planeHeight
+    , planeWidth = 60
     , gapToPlaneRatio = gapToPlaneRatio
     , gapHeight = gapHeight
+    , epsilon = 5
     }
-
 
 -- MODEL
 defaultGame : Game
@@ -78,10 +80,18 @@ updatePlayerY delta game =
 
 checkFailState : TimeUpdate
 checkFailState delta game =
-  {game | state <-
-    if game.state == Play && game.y <= -gameHeight/2 then GameOver
-    else game.state
-  }
+  let
+    playerOffScreen =
+      game.y <= -gameHeight/2
+    collisionPillars =
+      Array.filter (\p -> Utils.isColliding constants game p) game.pillars |>
+      Array.length
+    playerCollidedWithPillar = collisionPillars > 0
+  in
+    {game | state <-
+      if game.state == Play && (playerOffScreen || playerCollidedWithPillar) then GameOver
+      else game.state
+    }
 
 updateBackground : TimeUpdate
 updateBackground delta game =
@@ -107,7 +117,8 @@ updatePillars delta game =
          | otherwise -> game.timeToPillar
     shouldAddPillar = timeToPillar == constants.timeBetweenPillars && game.state == Play
     updatedPillars =
-      Array.map (\c -> {c | x <- c.x - constants.foregroundScrollV * (snd delta)}) game.pillars
+      Array.map (\p -> {p | x <- p.x - constants.foregroundScrollV * (snd delta)}) game.pillars |>
+      Array.filter (\p -> p.x > -(gameWidth/2))
     pillars =
       if | game.state /= Play -> game.pillars
          | shouldAddPillar -> Array.append  (generatePillars (fst delta) game) updatedPillars
@@ -128,15 +139,15 @@ generatePillars time game =
   in
     Array.fromList <|
     [
-      {
-      x = gameWidth / 2 + (toFloat constants.pillarWidth)
-      , pillarHeight = bottomHeight
+      { x = gameWidth/2 + (toFloat constants.pillarWidth)
+      , y = (toFloat bottomHeight/2) - (gameHeight/2)
+      , height = bottomHeight
       , kind = Bottom
       }
       ,
-      {
-      x = gameWidth / 2 + (toFloat constants.pillarWidth)
-      , pillarHeight = topHeight
+      { x = gameWidth/2 + (toFloat constants.pillarWidth)
+      , y = (gameHeight/2 - (toFloat topHeight/2))
+      , height = topHeight
       , kind = Top
       }
     ]
@@ -161,18 +172,15 @@ updatePlayerVelocity space game =
 
 -- VIEW
 pillarToForm : Pillar -> Form
-pillarToForm c =
+pillarToForm p =
   let
     imageName =
-      if c.kind == Top then "/images/topRock.png"
+      if p.kind == Top then "/images/topRock.png"
       else "/images/bottomRock.png"
-    y =
-      if c.kind == Top then (gameHeight/2 - (toFloat c.pillarHeight/2))
-      else (toFloat c.pillarHeight/2) - (gameHeight/2)
   in
-    image constants.pillarWidth c.pillarHeight imageName |>
+    image constants.pillarWidth p.height imageName |>
     toForm |>
-    move (c.x, y)
+    move (p.x, p.y)
 
 view : (Int,Int) -> Game -> Element
 view (w,h) game =
@@ -189,7 +197,7 @@ view (w,h) game =
            |> move (-game.backgroundX, 0)
       ,  toForm (image gameWidth gameHeight "/images/background.png")
            |> move (gameWidth - game.backgroundX, 0)
-      ,  toForm (image 60 constants.planeHeight "/images/plane.gif")
+      ,  toForm (image constants.planeWidth constants.planeHeight "/images/plane.gif")
           |> move (constants.playerX, game.y)
       ,  toForm (image 400 70 "/images/textGameOver.png")
           |> alpha gameOverAlpha

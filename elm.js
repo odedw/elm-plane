@@ -3230,6 +3230,7 @@ Elm.Main.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $Time = Elm.Time.make(_elm),
    $Types = Elm.Types.make(_elm),
+   $Utils = Elm.Utils.make(_elm),
    $Window = Elm.Window.make(_elm);
    var delta = $Time.timestamp(A2($Signal.map,
    $Time.inSeconds,
@@ -3259,6 +3260,7 @@ Elm.Main.make = function (_elm) {
       var gapHeight = $Basics.round($Basics.toFloat(planeHeight) * gapToPlaneRatio);
       return {_: {}
              ,backgroundScrollV: 40
+             ,epsilon: 5
              ,foregroundScrollV: 150
              ,gapHeight: gapHeight
              ,gapToPlaneRatio: gapToPlaneRatio
@@ -3267,6 +3269,7 @@ Elm.Main.make = function (_elm) {
              ,minPillarHeight: $Basics.round(gameHeight / 8)
              ,pillarWidth: 30
              ,planeHeight: planeHeight
+             ,planeWidth: 60
              ,playerX: 100 - gameWidth / 2
              ,timeBetweenPillars: 1.8};
    }();
@@ -3283,6 +3286,18 @@ Elm.Main.make = function (_elm) {
                          ,space ? constants.jumpSpeed : game.vy]],
       game);
    });
+   var pillarToForm = function (p) {
+      return function () {
+         var imageName = _U.eq(p.kind,
+         $Types.Top) ? "/images/topRock.png" : "/images/bottomRock.png";
+         return $Graphics$Collage.move({ctor: "_Tuple2"
+                                       ,_0: p.x
+                                       ,_1: p.y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+         constants.pillarWidth,
+         p.height,
+         imageName)));
+      }();
+   };
    var defaultGame = {_: {}
                      ,backgroundX: 0
                      ,foregroundX: 0
@@ -3304,11 +3319,24 @@ Elm.Main.make = function (_elm) {
    });
    var checkFailState = F2(function (delta,
    game) {
-      return _U.replace([["state"
-                         ,_U.eq(game.state,
-                         $Types.Play) && _U.cmp(game.y,
-                         (0 - gameHeight) / 2) < 1 ? $Types.GameOver : game.state]],
-      game);
+      return function () {
+         var collisionPillars = $Array.length(A2($Array.filter,
+         function (p) {
+            return A3($Utils.isColliding,
+            constants,
+            game,
+            p);
+         },
+         game.pillars));
+         var playerCollidedWithPillar = _U.cmp(collisionPillars,
+         0) > 0;
+         var playerOffScreen = _U.cmp(game.y,
+         (0 - gameHeight) / 2) < 1;
+         return _U.replace([["state"
+                            ,_U.eq(game.state,
+                            $Types.Play) && (playerOffScreen || playerCollidedWithPillar) ? $Types.GameOver : game.state]],
+         game);
+      }();
    });
    var updateBackground = F2(function (delta,
    game) {
@@ -3324,25 +3352,30 @@ Elm.Main.make = function (_elm) {
          var bottomHeight = $Basics.fst($Random.generate(game.randomizer)($Random.initialSeed($Basics.round($Time.inMilliseconds(time)))));
          var topHeight = gameHeight - bottomHeight - constants.gapHeight;
          return $Array.fromList(_L.fromArray([{_: {}
+                                              ,height: bottomHeight
                                               ,kind: $Types.Bottom
-                                              ,pillarHeight: bottomHeight
-                                              ,x: gameWidth / 2 + $Basics.toFloat(constants.pillarWidth)}
+                                              ,x: gameWidth / 2 + $Basics.toFloat(constants.pillarWidth)
+                                              ,y: $Basics.toFloat(bottomHeight) / 2 - gameHeight / 2}
                                              ,{_: {}
+                                              ,height: topHeight
                                               ,kind: $Types.Top
-                                              ,pillarHeight: topHeight
-                                              ,x: gameWidth / 2 + $Basics.toFloat(constants.pillarWidth)}]));
+                                              ,x: gameWidth / 2 + $Basics.toFloat(constants.pillarWidth)
+                                              ,y: gameHeight / 2 - $Basics.toFloat(topHeight) / 2}]));
       }();
    });
    var updatePillars = F2(function (delta,
    game) {
       return function () {
-         var updatedPillars = A2($Array.map,
-         function (c) {
+         var updatedPillars = $Array.filter(function (p) {
+            return _U.cmp(p.x,
+            0 - gameWidth / 2) > 0;
+         })(A2($Array.map,
+         function (p) {
             return _U.replace([["x"
-                               ,c.x - constants.foregroundScrollV * $Basics.snd(delta)]],
-            c);
+                               ,p.x - constants.foregroundScrollV * $Basics.snd(delta)]],
+            p);
          },
-         game.pillars);
+         game.pillars));
          var timeToPillar = _U.cmp(game.timeToPillar,
          0) < 1 ? constants.timeBetweenPillars : _U.eq(game.state,
          $Types.Play) ? game.timeToPillar - $Basics.snd(delta) : game.timeToPillar;
@@ -3370,27 +3403,13 @@ Elm.Main.make = function (_elm) {
             case "TimeDelta":
             return updatePillars(input._0)(checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game)))));}
          _U.badCase($moduleName,
-         "between lines 56 and 68");
+         "between lines 58 and 70");
       }();
    });
    var gameState = A3($Signal.foldp,
    update,
    defaultGame,
    input);
-   var pillarToForm = function (c) {
-      return function () {
-         var y = _U.eq(c.kind,
-         $Types.Top) ? gameHeight / 2 - $Basics.toFloat(c.pillarHeight) / 2 : $Basics.toFloat(c.pillarHeight) / 2 - gameHeight / 2;
-         var imageName = _U.eq(c.kind,
-         $Types.Top) ? "/images/topRock.png" : "/images/bottomRock.png";
-         return $Graphics$Collage.move({ctor: "_Tuple2"
-                                       ,_0: c.x
-                                       ,_1: y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
-         constants.pillarWidth,
-         c.pillarHeight,
-         imageName)));
-      }();
-   };
    var view = F2(function (_v3,
    game) {
       return function () {
@@ -3419,7 +3438,7 @@ Elm.Main.make = function (_elm) {
                                              ,$Graphics$Collage.move({ctor: "_Tuple2"
                                                                      ,_0: constants.playerX
                                                                      ,_1: game.y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                             60,
+                                             constants.planeWidth,
                                              constants.planeHeight,
                                              "/images/plane.gif")))
                                              ,$Graphics$Collage.alpha(gameOverAlpha)($Graphics$Collage.toForm(A3($Graphics$Element.image,
@@ -3440,7 +3459,7 @@ Elm.Main.make = function (_elm) {
                  $Array.toList(pillarForms))));
               }();}
          _U.badCase($moduleName,
-         "between lines 179 and 202");
+         "between lines 187 and 210");
       }();
    });
    var main = A3($Signal.map2,
@@ -10782,18 +10801,24 @@ Elm.Types.make = function (_elm) {
                            return function (i) {
                               return function (j) {
                                  return function (k) {
-                                    return {_: {}
-                                           ,backgroundScrollV: a
-                                           ,foregroundScrollV: b
-                                           ,gapHeight: k
-                                           ,gapToPlaneRatio: j
-                                           ,gravity: e
-                                           ,jumpSpeed: d
-                                           ,minPillarHeight: h
-                                           ,pillarWidth: g
-                                           ,planeHeight: i
-                                           ,playerX: c
-                                           ,timeBetweenPillars: f};
+                                    return function (l) {
+                                       return function (m) {
+                                          return {_: {}
+                                                 ,backgroundScrollV: a
+                                                 ,epsilon: m
+                                                 ,foregroundScrollV: b
+                                                 ,gapHeight: l
+                                                 ,gapToPlaneRatio: k
+                                                 ,gravity: e
+                                                 ,jumpSpeed: d
+                                                 ,minPillarHeight: h
+                                                 ,pillarWidth: g
+                                                 ,planeHeight: i
+                                                 ,planeWidth: j
+                                                 ,playerX: c
+                                                 ,timeBetweenPillars: f};
+                                       };
+                                    };
                                  };
                               };
                            };
@@ -10805,13 +10830,15 @@ Elm.Types.make = function (_elm) {
          };
       };
    };
-   var Pillar = F3(function (a,
+   var Pillar = F4(function (a,
    b,
-   c) {
+   c,
+   d) {
       return {_: {}
-             ,kind: c
-             ,pillarHeight: b
-             ,x: a};
+             ,height: c
+             ,kind: d
+             ,x: a
+             ,y: b};
    });
    var Bottom = {ctor: "Bottom"};
    var Top = {ctor: "Top"};
@@ -10830,6 +10857,55 @@ Elm.Types.make = function (_elm) {
                        ,TimeDelta: TimeDelta
                        ,Space: Space};
    return _elm.Types.values;
+};
+Elm.Utils = Elm.Utils || {};
+Elm.Utils.make = function (_elm) {
+   "use strict";
+   _elm.Utils = _elm.Utils || {};
+   if (_elm.Utils.values)
+   return _elm.Utils.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Utils",
+   $Basics = Elm.Basics.make(_elm),
+   $Debug = Elm.Debug.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Types = Elm.Types.make(_elm);
+   var isColliding = F3(function (constants,
+   game,
+   pillar) {
+      return function () {
+         var r2 = {_: {}
+                  ,bottom: pillar.y - $Basics.toFloat(pillar.height) / 2 + constants.epsilon
+                  ,left: pillar.x - $Basics.toFloat(constants.pillarWidth) / 2 + constants.epsilon
+                  ,right: pillar.x + $Basics.toFloat(constants.pillarWidth) / 2 - constants.epsilon
+                  ,top: pillar.y + $Basics.toFloat(pillar.height) / 2 - constants.epsilon};
+         var r2d = A2($Debug.watch,
+         "r2",
+         r2);
+         var r1 = {_: {}
+                  ,bottom: game.y - $Basics.toFloat(constants.planeHeight) / 2 + constants.epsilon
+                  ,left: constants.playerX - $Basics.toFloat(constants.planeWidth) / 2 + constants.epsilon
+                  ,right: constants.playerX + $Basics.toFloat(constants.planeWidth) / 2 - constants.epsilon
+                  ,top: game.y + $Basics.toFloat(constants.planeHeight) / 2 - constants.epsilon};
+         var r1d = A2($Debug.watch,
+         "r1",
+         r1);
+         return $Basics.not(_U.cmp(r2.left,
+         r1.right) > 0 || (_U.cmp(r2.right,
+         r1.left) < 0 || (_U.cmp(r2.top,
+         r1.bottom) < 0 || _U.cmp(r2.bottom,
+         r1.top) > 0)));
+      }();
+   });
+   _elm.Utils.values = {_op: _op
+                       ,isColliding: isColliding};
+   return _elm.Utils.values;
 };
 Elm.Window = Elm.Window || {};
 Elm.Window.make = function (_elm) {
