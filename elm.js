@@ -3220,7 +3220,6 @@ Elm.Main.make = function (_elm) {
    $moduleName = "Main",
    $Array = Elm.Array.make(_elm),
    $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
    $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
    $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $Keyboard = Elm.Keyboard.make(_elm),
@@ -3265,32 +3264,50 @@ Elm.Main.make = function (_elm) {
              ,vy: e
              ,y: d};
    });
-   var Constants = F8(function (a,
-   b,
-   c,
-   d,
-   e,
-   f,
-   g,
-   h) {
-      return {_: {}
-             ,backgroundScrollV: a
-             ,columnGap: h
-             ,columnWidth: g
-             ,foregroundScrollV: b
-             ,gravity: e
-             ,jumpSpeed: d
-             ,playerX: c
-             ,timeBetweenColumns: f};
-   });
+   var Constants = function (a) {
+      return function (b) {
+         return function (c) {
+            return function (d) {
+               return function (e) {
+                  return function (f) {
+                     return function (g) {
+                        return function (h) {
+                           return function (i) {
+                              return function (j) {
+                                 return function (k) {
+                                    return {_: {}
+                                           ,backgroundScrollV: a
+                                           ,columnWidth: g
+                                           ,foregroundScrollV: b
+                                           ,gapHeight: k
+                                           ,gapToPlaneRatio: j
+                                           ,gravity: e
+                                           ,jumpSpeed: d
+                                           ,minColumnHeight: h
+                                           ,planeHeight: i
+                                           ,playerX: c
+                                           ,timeBetweenColumns: f};
+                                 };
+                              };
+                           };
+                        };
+                     };
+                  };
+               };
+            };
+         };
+      };
+   };
    var Column = F3(function (a,
    b,
    c) {
       return {_: {}
-             ,bottomHeight: b
-             ,topHeight: c
+             ,columnHeight: b
+             ,kind: c
              ,x: a};
    });
+   var Bottom = {ctor: "Bottom"};
+   var Top = {ctor: "Top"};
    var GameOver = {ctor: "GameOver"};
    var Start = {ctor: "Start"};
    var Play = {ctor: "Play"};
@@ -3307,15 +3324,23 @@ Elm.Main.make = function (_elm) {
            ,_1: 480},
    gameWidth = $._0,
    gameHeight = $._1;
-   var constants = {_: {}
-                   ,backgroundScrollV: 40
-                   ,columnGap: $Basics.round(gameHeight / 7)
-                   ,columnWidth: 30
-                   ,foregroundScrollV: 150
-                   ,gravity: 1500.0
-                   ,jumpSpeed: 370.0
-                   ,playerX: 100 - gameWidth / 2
-                   ,timeBetweenColumns: 2};
+   var constants = function () {
+      var gapToPlaneRatio = 4;
+      var planeHeight = 35;
+      var gapHeight = $Basics.round($Basics.toFloat(planeHeight) * gapToPlaneRatio);
+      return {_: {}
+             ,backgroundScrollV: 40
+             ,columnWidth: 30
+             ,foregroundScrollV: 150
+             ,gapHeight: gapHeight
+             ,gapToPlaneRatio: gapToPlaneRatio
+             ,gravity: 1500.0
+             ,jumpSpeed: 370.0
+             ,minColumnHeight: $Basics.round(gameHeight / 8)
+             ,planeHeight: planeHeight
+             ,playerX: 100 - gameWidth / 2
+             ,timeBetweenColumns: 1.8};
+   }();
    var applyPhysics = F2(function (delta,
    game) {
       return _U.replace([["vy"
@@ -3334,8 +3359,8 @@ Elm.Main.make = function (_elm) {
                      ,columns: $Array.empty
                      ,foregroundX: 0
                      ,randomizer: A2($Random.$int,
-                     constants.columnGap / 2 | 0,
-                     gameHeight / 2 | 0)
+                     constants.minColumnHeight,
+                     gameHeight - constants.minColumnHeight - constants.gapHeight)
                      ,state: Start
                      ,timeToColumn: constants.timeBetweenColumns
                      ,vy: 0
@@ -3364,14 +3389,19 @@ Elm.Main.make = function (_elm) {
                          GameOver) ? game.backgroundX : game.backgroundX + $Basics.snd(delta) * constants.backgroundScrollV]],
       game);
    });
-   var generateColumn = F2(function (time,
+   var generateColumns = F2(function (time,
    game) {
       return function () {
-         var randomBottomHeight = $Basics.fst($Random.generate(game.randomizer)($Random.initialSeed($Basics.round($Time.inMilliseconds(time)))));
-         return {_: {}
-                ,bottomHeight: randomBottomHeight
-                ,topHeight: 0
-                ,x: gameWidth / 2 + constants.columnWidth};
+         var bottomHeight = $Basics.fst($Random.generate(game.randomizer)($Random.initialSeed($Basics.round($Time.inMilliseconds(time)))));
+         var topHeight = gameHeight - bottomHeight - constants.gapHeight;
+         return $Array.fromList(_L.fromArray([{_: {}
+                                              ,columnHeight: bottomHeight
+                                              ,kind: Bottom
+                                              ,x: gameWidth / 2 + $Basics.toFloat(constants.columnWidth)}
+                                             ,{_: {}
+                                              ,columnHeight: topHeight
+                                              ,kind: Top
+                                              ,x: gameWidth / 2 + $Basics.toFloat(constants.columnWidth)}]));
       }();
    });
    var updateColumns = F2(function (delta,
@@ -3391,8 +3421,8 @@ Elm.Main.make = function (_elm) {
          constants.timeBetweenColumns) && _U.eq(game.state,
          Play);
          var columns = !_U.eq(game.state,
-         Play) ? game.columns : shouldAddColumn ? A2($Array.push,
-         A2(generateColumn,
+         Play) ? game.columns : shouldAddColumn ? A2($Array.append,
+         A2(generateColumns,
          $Basics.fst(delta),
          game),
          updatedColumns) : updatedColumns;
@@ -3405,24 +3435,33 @@ Elm.Main.make = function (_elm) {
    var update = F2(function (input,
    game) {
       return function () {
-         var newGame = A2($Debug.watch,
-         "game",
-         game);
-         return function () {
-            switch (input.ctor)
-            {case "Space":
-               return updatePlayerVelocity(input._0)(transitionState(input._0)(game));
-               case "TimeDelta":
-               return updateColumns(input._0)(checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game)))));}
-            _U.badCase($moduleName,
-            "between lines 81 and 93");
-         }();
+         switch (input.ctor)
+         {case "Space":
+            return updatePlayerVelocity(input._0)(transitionState(input._0)(game));
+            case "TimeDelta":
+            return updateColumns(input._0)(checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game)))));}
+         _U.badCase($moduleName,
+         "between lines 93 and 105");
       }();
    });
    var gameState = A3($Signal.foldp,
    update,
    defaultGame,
    input);
+   var columnToForm = function (c) {
+      return function () {
+         var y = _U.eq(c.kind,
+         Top) ? gameHeight / 2 - $Basics.toFloat(c.columnHeight) / 2 : $Basics.toFloat(c.columnHeight) / 2 - gameHeight / 2;
+         var imageName = _U.eq(c.kind,
+         Top) ? "/images/topRock.png" : "/images/bottomRock.png";
+         return $Graphics$Collage.move({ctor: "_Tuple2"
+                                       ,_0: c.x
+                                       ,_1: y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+         constants.columnWidth,
+         c.columnHeight,
+         imageName)));
+      }();
+   };
    var view = F2(function (_v3,
    game) {
       return function () {
@@ -3430,14 +3469,7 @@ Elm.Main.make = function (_elm) {
          {case "_Tuple2":
             return function () {
                  var columnForms = A2($Array.map,
-                 function (c) {
-                    return $Graphics$Collage.move({ctor: "_Tuple2"
-                                                  ,_0: c.x
-                                                  ,_1: $Basics.toFloat(c.bottomHeight) / 2 - gameHeight / 2})($Graphics$Collage.toForm(A3($Graphics$Element.image,
-                    $Basics.round(constants.columnWidth),
-                    c.bottomHeight,
-                    "/images/rock.png")));
-                 },
+                 columnToForm,
                  game.columns);
                  var getReadyAlpha = _U.eq(game.state,
                  Start) ? 1 : 0;
@@ -3459,7 +3491,7 @@ Elm.Main.make = function (_elm) {
                                                                      ,_0: constants.playerX
                                                                      ,_1: game.y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
                                              60,
-                                             35,
+                                             constants.planeHeight,
                                              "/images/plane.gif")))
                                              ,$Graphics$Collage.alpha(gameOverAlpha)($Graphics$Collage.toForm(A3($Graphics$Element.image,
                                              400,
@@ -3479,7 +3511,7 @@ Elm.Main.make = function (_elm) {
                  $Array.toList(columnForms))));
               }();}
          _U.badCase($moduleName,
-         "between lines 179 and 202");
+         "between lines 216 and 239");
       }();
    });
    var main = A3($Signal.map2,
@@ -3492,6 +3524,8 @@ Elm.Main.make = function (_elm) {
                       ,Play: Play
                       ,Start: Start
                       ,GameOver: GameOver
+                      ,Top: Top
+                      ,Bottom: Bottom
                       ,Column: Column
                       ,Constants: Constants
                       ,Game: Game
@@ -3503,9 +3537,10 @@ Elm.Main.make = function (_elm) {
                       ,updateBackground: updateBackground
                       ,applyPhysics: applyPhysics
                       ,updateColumns: updateColumns
-                      ,generateColumn: generateColumn
+                      ,generateColumns: generateColumns
                       ,transitionState: transitionState
                       ,updatePlayerVelocity: updatePlayerVelocity
+                      ,columnToForm: columnToForm
                       ,view: view
                       ,TimeDelta: TimeDelta
                       ,Space: Space

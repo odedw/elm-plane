@@ -4,7 +4,7 @@ import Graphics.Element exposing (..)
 import Keyboard
 import Time exposing (..)
 import Window
-import Debug
+import Debug exposing (watch)
 import Array
 import List
 import Random exposing (int, generate, initialSeed, Generator, Seed)
@@ -12,11 +12,11 @@ import Random exposing (int, generate, initialSeed, Generator, Seed)
 (gameWidth,gameHeight) = (800,480)
 
 type State = Play | Start | GameOver
-
+type Kind = Top | Bottom
 type alias Column =
   { x : Float
-  , bottomHeight: Int
-  , topHeight: Int
+  , columnHeight: Int
+  , kind : Kind
   }
 type alias Constants =
   {
@@ -26,8 +26,11 @@ type alias Constants =
   , jumpSpeed : Float
   , gravity : Float
   , timeBetweenColumns : Float
-  , columnWidth : Float
-  , columnGap : Int
+  , columnWidth : Int
+  , minColumnHeight : Int
+  , planeHeight : Int
+  , gapToPlaneRatio : Float
+  , gapHeight : Int
   }
 type alias Game =
   { state : State
@@ -48,16 +51,25 @@ type alias TimeUpdate =
 
 constants : Constants
 constants =
-  {
-  backgroundScrollV = 40
-  , foregroundScrollV = 150
-  , playerX = 100 - gameWidth / 2
-  , jumpSpeed = 370.0
-  , gravity = 1500.0
-  , timeBetweenColumns = 2
-  , columnWidth = 30
-  , columnGap = round (gameHeight / 7)
-  }
+  let
+    planeHeight = 35
+    gapToPlaneRatio = 4
+    gapHeight = round ((toFloat planeHeight) * gapToPlaneRatio)
+  in
+    {
+    backgroundScrollV = 40
+    , foregroundScrollV = 150
+    , playerX = 100 - gameWidth / 2
+    , jumpSpeed = 370.0
+    , gravity = 1500.0
+    , timeBetweenColumns = 1.8
+    , columnWidth = 30
+    , minColumnHeight = round (gameHeight / 8)
+    , planeHeight = planeHeight
+    , gapToPlaneRatio = gapToPlaneRatio
+    , gapHeight = gapHeight
+    }
+
 
 -- MODEL
 defaultGame : Game
@@ -69,15 +81,15 @@ defaultGame =
   , vy = 0
   , timeToColumn = constants.timeBetweenColumns
   , columns = Array.empty
-  , randomizer = Random.int (constants.columnGap//2) (gameHeight//2)
+  , randomizer = Random.int constants.minColumnHeight (gameHeight - constants.minColumnHeight - constants.gapHeight)
   }
 
 -- UPDATE
 update : Input -> Game -> Game
 update input game =
-  let
-    newGame = Debug.watch "game" game
-  in
+  -- let
+    -- newGame = Debug.watch "game" game
+  -- in
     case input of
       TimeDelta delta ->
         --TODO: can I pass the delta somehow as well?
@@ -135,7 +147,7 @@ updateColumns delta game =
       Array.map (\c -> {c | x <- c.x - constants.foregroundScrollV * (snd delta)}) game.columns
     columns =
       if | game.state /= Play -> game.columns
-         | shouldAddColumn -> Array.push (generateColumn (fst delta) game) updatedColumns
+         | shouldAddColumn -> Array.append  (generateColumns (fst delta) game) updatedColumns
          | otherwise -> updatedColumns
 
   in
@@ -143,17 +155,28 @@ updateColumns delta game =
           , columns <- columns
     }
 
-generateColumn : Time -> Game -> Column
-generateColumn time game =
+generateColumns : Time -> Game -> Array.Array Column
+generateColumns time game =
   let
-    randomBottomHeight =
+    bottomHeight =
       fst <| generate game.randomizer <| initialSeed <| round <| inMilliseconds time
+    topHeight =
+      gameHeight - bottomHeight - constants.gapHeight
   in
-    {
-    x = gameWidth / 2 + constants.columnWidth
-    , bottomHeight = randomBottomHeight
-    , topHeight = 0
-    }
+    Array.fromList <|
+    [
+      {
+      x = gameWidth / 2 + (toFloat constants.columnWidth)
+      , columnHeight = bottomHeight
+      , kind = Bottom
+      }
+      ,
+      {
+      x = gameWidth / 2 + (toFloat constants.columnWidth)
+      , columnHeight = topHeight
+      , kind = Top
+      }
+    ]
 
 --Input updates
 transitionState : KeyUpdate
@@ -174,6 +197,20 @@ updatePlayerVelocity space game =
   }
 
 -- VIEW
+columnToForm : Column -> Form
+columnToForm c =
+  let
+    imageName =
+      if c.kind == Top then "/images/topRock.png"
+      else "/images/bottomRock.png"
+    y =
+      if c.kind == Top then (gameHeight/2 - (toFloat c.columnHeight/2))
+      else (toFloat c.columnHeight/2) - (gameHeight/2)
+  in
+    image constants.columnWidth c.columnHeight imageName |>
+    toForm |>
+    move (c.x, y)
+
 view : (Int,Int) -> Game -> Element
 view (w,h) game =
   let
@@ -182,14 +219,14 @@ view (w,h) game =
     getReadyAlpha =
       if game.state == Start then 1 else 0
     columnForms =
-      Array.map (\c -> toForm(image (round constants.columnWidth) c.bottomHeight "/images/rock.png") |> move (c.x, (toFloat c.bottomHeight/2) - gameHeight/2)) game.columns
+      Array.map columnToForm game.columns
     formList =
       [
          toForm (image gameWidth gameHeight "/images/background.png")
            |> move (-game.backgroundX, 0)
       ,  toForm (image gameWidth gameHeight "/images/background.png")
            |> move (gameWidth - game.backgroundX, 0)
-      ,  toForm (image 60 35 "/images/plane.gif")
+      ,  toForm (image 60 constants.planeHeight "/images/plane.gif")
           |> move (constants.playerX, game.y)
       ,  toForm (image 400 70 "/images/textGameOver.png")
           |> alpha gameOverAlpha
