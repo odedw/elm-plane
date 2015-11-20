@@ -74,7 +74,7 @@ updatePlayerY : TimeUpdate
 updatePlayerY delta game =
   {game | y <-
     if | game.state == Start -> game.y + (sin (game.backgroundX / 10))
-       | game.state == Play -> game.y + game.vy * (snd delta)
+       | game.state == Play || (game.state == GameOver && game.y > -gameHeight/2)-> game.y + game.vy * (snd delta)
        | otherwise -> game.y
   }
 
@@ -104,7 +104,7 @@ updateBackground delta game =
 applyPhysics : TimeUpdate
 applyPhysics delta game =
   {game | vy <-
-    if | game.state == GameOver -> 0
+    if | game.state == GameOver && game.y <= -gameHeight/2 -> 0
        | otherwise -> game.vy - (snd delta) * constants.gravity
   }
 
@@ -155,7 +155,7 @@ generatePillars time game =
 --Input updates
 transitionState : KeyUpdate
 transitionState space game =
-  if game.state == GameOver && space then defaultGame --Reset
+  if game.state == GameOver && game.y <= -gameHeight/2 && space then defaultGame --Reset
   else
     {game |
       state <-
@@ -166,7 +166,7 @@ transitionState space game =
 updatePlayerVelocity : KeyUpdate
 updatePlayerVelocity space game =
   {game | vy <-
-    if space then constants.jumpSpeed
+    if game.state == Play && space then constants.jumpSpeed
     else game.vy
   }
 

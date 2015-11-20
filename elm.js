@@ -3241,14 +3241,6 @@ Elm.Main.make = function (_elm) {
                                               ,A2($Signal.map,
                                               $Types.Space,
                                               $Keyboard.space)]));
-   var updatePlayerY = F2(function (delta,
-   game) {
-      return _U.replace([["y"
-                         ,_U.eq(game.state,
-                         $Types.Start) ? game.y + $Basics.sin(game.backgroundX / 10) : _U.eq(game.state,
-                         $Types.Play) ? game.y + game.vy * $Basics.snd(delta) : game.y]],
-      game);
-   });
    var $ = {ctor: "_Tuple2"
            ,_0: 800
            ,_1: 480},
@@ -3273,17 +3265,11 @@ Elm.Main.make = function (_elm) {
              ,playerX: 100 - gameWidth / 2
              ,timeBetweenPillars: 1.8};
    }();
-   var applyPhysics = F2(function (delta,
-   game) {
-      return _U.replace([["vy"
-                         ,_U.eq(game.state,
-                         $Types.GameOver) ? 0 : game.vy - $Basics.snd(delta) * constants.gravity]],
-      game);
-   });
    var updatePlayerVelocity = F2(function (space,
    game) {
       return _U.replace([["vy"
-                         ,space ? constants.jumpSpeed : game.vy]],
+                         ,_U.eq(game.state,
+                         $Types.Play) && space ? constants.jumpSpeed : game.vy]],
       game);
    });
    var pillarToForm = function (p) {
@@ -3309,12 +3295,14 @@ Elm.Main.make = function (_elm) {
                      ,timeToPillar: constants.timeBetweenPillars
                      ,vy: 0
                      ,y: 0};
-   var transitionState = F2(function (space,
+   var updatePlayerY = F2(function (delta,
    game) {
-      return _U.eq(game.state,
-      $Types.GameOver) && space ? defaultGame : _U.replace([["state"
-                                                            ,_U.eq(game.state,
-                                                            $Types.Start) && space ? $Types.Play : game.state]],
+      return _U.replace([["y"
+                         ,_U.eq(game.state,
+                         $Types.Start) ? game.y + $Basics.sin(game.backgroundX / 10) : _U.eq(game.state,
+                         $Types.Play) || _U.eq(game.state,
+                         $Types.GameOver) && _U.cmp(game.y,
+                         (0 - gameHeight) / 2) > 0 ? game.y + game.vy * $Basics.snd(delta) : game.y]],
       game);
    });
    var checkFailState = F2(function (delta,
@@ -3344,6 +3332,14 @@ Elm.Main.make = function (_elm) {
                          ,_U.cmp(game.backgroundX,
                          gameWidth) > 0 ? 0 : _U.eq(game.state,
                          $Types.GameOver) ? game.backgroundX : game.backgroundX + $Basics.snd(delta) * constants.backgroundScrollV]],
+      game);
+   });
+   var applyPhysics = F2(function (delta,
+   game) {
+      return _U.replace([["vy"
+                         ,_U.eq(game.state,
+                         $Types.GameOver) && _U.cmp(game.y,
+                         (0 - gameHeight) / 2) < 1 ? 0 : game.vy - $Basics.snd(delta) * constants.gravity]],
       game);
    });
    var generatePillars = F2(function (time,
@@ -3393,6 +3389,15 @@ Elm.Main.make = function (_elm) {
                            ,["pillars",pillars]],
          game);
       }();
+   });
+   var transitionState = F2(function (space,
+   game) {
+      return _U.eq(game.state,
+      $Types.GameOver) && (_U.cmp(game.y,
+      (0 - gameHeight) / 2) < 1 && space) ? defaultGame : _U.replace([["state"
+                                                                      ,_U.eq(game.state,
+                                                                      $Types.Start) && space ? $Types.Play : game.state]],
+      game);
    });
    var update = F2(function (input,
    game) {
