@@ -3247,6 +3247,7 @@ Elm.Main.make = function (_elm) {
    gameWidth = $._0,
    gameHeight = $._1;
    var constants = function () {
+      var minPillarHeight = $Basics.round(gameHeight / 8);
       var gapToPlaneRatio = 4;
       var planeHeight = 35;
       var gapHeight = $Basics.round($Basics.toFloat(planeHeight) * gapToPlaneRatio);
@@ -3258,13 +3259,25 @@ Elm.Main.make = function (_elm) {
              ,gapToPlaneRatio: gapToPlaneRatio
              ,gravity: 1500.0
              ,jumpSpeed: 370.0
-             ,minPillarHeight: $Basics.round(gameHeight / 8)
+             ,minPillarHeight: minPillarHeight
              ,pillarWidth: 30
              ,planeHeight: planeHeight
              ,planeWidth: 60
              ,playerX: 100 - gameWidth / 2
+             ,randomizer: A2($Random.$int,
+             minPillarHeight,
+             gameHeight - minPillarHeight - gapHeight)
              ,timeBetweenPillars: 1.8};
    }();
+   var defaultGame = {_: {}
+                     ,backgroundX: 0
+                     ,foregroundX: 0
+                     ,pillars: $Array.empty
+                     ,score: 0
+                     ,state: $Types.Start
+                     ,timeToPillar: constants.timeBetweenPillars
+                     ,vy: 0
+                     ,y: 0};
    var updatePlayerVelocity = F2(function (space,
    game) {
       return _U.replace([["vy"
@@ -3284,17 +3297,6 @@ Elm.Main.make = function (_elm) {
          imageName)));
       }();
    };
-   var defaultGame = {_: {}
-                     ,backgroundX: 0
-                     ,foregroundX: 0
-                     ,pillars: $Array.empty
-                     ,randomizer: A2($Random.$int,
-                     constants.minPillarHeight,
-                     gameHeight - constants.minPillarHeight - constants.gapHeight)
-                     ,state: $Types.Start
-                     ,timeToPillar: constants.timeBetweenPillars
-                     ,vy: 0
-                     ,y: 0};
    var updatePlayerY = F2(function (delta,
    game) {
       return _U.replace([["y"
@@ -3345,7 +3347,7 @@ Elm.Main.make = function (_elm) {
    var generatePillars = F2(function (time,
    game) {
       return function () {
-         var bottomHeight = $Basics.fst($Random.generate(game.randomizer)($Random.initialSeed($Basics.round($Time.inMilliseconds(time)))));
+         var bottomHeight = $Basics.fst($Random.generate(constants.randomizer)($Random.initialSeed($Basics.round($Time.inMilliseconds(time)))));
          var topHeight = gameHeight - bottomHeight - constants.gapHeight;
          return $Array.fromList(_L.fromArray([{_: {}
                                               ,height: bottomHeight
@@ -3408,7 +3410,7 @@ Elm.Main.make = function (_elm) {
             case "TimeDelta":
             return updatePillars(input._0)(checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game)))));}
          _U.badCase($moduleName,
-         "between lines 58 and 70");
+         "between lines 60 and 72");
       }();
    });
    var gameState = A3($Signal.foldp,
@@ -3464,7 +3466,7 @@ Elm.Main.make = function (_elm) {
                  $Array.toList(pillarForms))));
               }();}
          _U.badCase($moduleName,
-         "between lines 187 and 210");
+         "between lines 189 and 212");
       }();
    });
    var main = A3($Signal.map2,
@@ -10789,7 +10791,7 @@ Elm.Types.make = function (_elm) {
              ,backgroundX: c
              ,foregroundX: b
              ,pillars: g
-             ,randomizer: h
+             ,score: h
              ,state: a
              ,timeToPillar: f
              ,vy: e
@@ -10808,20 +10810,23 @@ Elm.Types.make = function (_elm) {
                                  return function (k) {
                                     return function (l) {
                                        return function (m) {
-                                          return {_: {}
-                                                 ,backgroundScrollV: a
-                                                 ,epsilon: m
-                                                 ,foregroundScrollV: b
-                                                 ,gapHeight: l
-                                                 ,gapToPlaneRatio: k
-                                                 ,gravity: e
-                                                 ,jumpSpeed: d
-                                                 ,minPillarHeight: h
-                                                 ,pillarWidth: g
-                                                 ,planeHeight: i
-                                                 ,planeWidth: j
-                                                 ,playerX: c
-                                                 ,timeBetweenPillars: f};
+                                          return function (n) {
+                                             return {_: {}
+                                                    ,backgroundScrollV: a
+                                                    ,epsilon: m
+                                                    ,foregroundScrollV: b
+                                                    ,gapHeight: l
+                                                    ,gapToPlaneRatio: k
+                                                    ,gravity: e
+                                                    ,jumpSpeed: d
+                                                    ,minPillarHeight: h
+                                                    ,pillarWidth: g
+                                                    ,planeHeight: i
+                                                    ,planeWidth: j
+                                                    ,playerX: c
+                                                    ,randomizer: n
+                                                    ,timeBetweenPillars: f};
+                                          };
                                        };
                                     };
                                  };

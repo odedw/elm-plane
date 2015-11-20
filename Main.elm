@@ -19,6 +19,7 @@ constants =
     planeHeight = 35
     gapToPlaneRatio = 4
     gapHeight = round ((toFloat planeHeight) * gapToPlaneRatio)
+    minPillarHeight = round (gameHeight / 8)
   in
     {
     backgroundScrollV = 40
@@ -28,12 +29,13 @@ constants =
     , gravity = 1500.0
     , timeBetweenPillars = 1.8
     , pillarWidth = 30
-    , minPillarHeight = round (gameHeight / 8)
+    , minPillarHeight = minPillarHeight
     , planeHeight = planeHeight
     , planeWidth = 60
     , gapToPlaneRatio = gapToPlaneRatio
     , gapHeight = gapHeight
     , epsilon = 5
+    , randomizer = Random.int minPillarHeight (gameHeight - minPillarHeight - gapHeight)
     }
 
 -- MODEL
@@ -46,7 +48,7 @@ defaultGame =
   , vy = 0
   , timeToPillar = constants.timeBetweenPillars
   , pillars = Array.empty
-  , randomizer = Random.int constants.minPillarHeight (gameHeight - constants.minPillarHeight - constants.gapHeight)
+  , score = 0
   }
 
 -- UPDATE
@@ -133,7 +135,7 @@ generatePillars : Time -> Game -> Array.Array Pillar
 generatePillars time game =
   let
     bottomHeight =
-      fst <| generate game.randomizer <| initialSeed <| round <| inMilliseconds time
+      fst <| generate constants.randomizer <| initialSeed <| round <| inMilliseconds time
     topHeight =
       gameHeight - bottomHeight - constants.gapHeight
   in

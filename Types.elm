@@ -26,6 +26,7 @@ type alias Constants =
   , gapToPlaneRatio : Float
   , gapHeight : Int
   , epsilon : Float
+  , randomizer : Generator Int
   }
 type alias Game =
   { state : State
@@ -35,7 +36,7 @@ type alias Game =
   , vy : Float
   , timeToPillar : Float
   , pillars : Array.Array Pillar
-  , randomizer : Generator Int
+  , score : Int
   }
 
 type alias KeyUpdate =
