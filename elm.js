@@ -3229,94 +3229,23 @@ Elm.Main.make = function (_elm) {
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $Time = Elm.Time.make(_elm),
+   $Types = Elm.Types.make(_elm),
    $Window = Elm.Window.make(_elm);
    var delta = $Time.timestamp(A2($Signal.map,
    $Time.inSeconds,
    $Time.fps(45)));
-   var Space = function (a) {
-      return {ctor: "Space",_0: a};
-   };
-   var TimeDelta = function (a) {
-      return {ctor: "TimeDelta"
-             ,_0: a};
-   };
    var input = $Signal.mergeMany(_L.fromArray([A2($Signal.map,
-                                              TimeDelta,
+                                              $Types.TimeDelta,
                                               delta)
                                               ,A2($Signal.map,
-                                              Space,
+                                              $Types.Space,
                                               $Keyboard.space)]));
-   var Game = F8(function (a,
-   b,
-   c,
-   d,
-   e,
-   f,
-   g,
-   h) {
-      return {_: {}
-             ,backgroundX: c
-             ,foregroundX: b
-             ,pillars: g
-             ,randomizer: h
-             ,state: a
-             ,timeToPillar: f
-             ,vy: e
-             ,y: d};
-   });
-   var Constants = function (a) {
-      return function (b) {
-         return function (c) {
-            return function (d) {
-               return function (e) {
-                  return function (f) {
-                     return function (g) {
-                        return function (h) {
-                           return function (i) {
-                              return function (j) {
-                                 return function (k) {
-                                    return {_: {}
-                                           ,backgroundScrollV: a
-                                           ,foregroundScrollV: b
-                                           ,gapHeight: k
-                                           ,gapToPlaneRatio: j
-                                           ,gravity: e
-                                           ,jumpSpeed: d
-                                           ,minPillarHeight: h
-                                           ,pillarWidth: g
-                                           ,planeHeight: i
-                                           ,playerX: c
-                                           ,timeBetweenPillars: f};
-                                 };
-                              };
-                           };
-                        };
-                     };
-                  };
-               };
-            };
-         };
-      };
-   };
-   var Pillar = F3(function (a,
-   b,
-   c) {
-      return {_: {}
-             ,kind: c
-             ,pillarHeight: b
-             ,x: a};
-   });
-   var Bottom = {ctor: "Bottom"};
-   var Top = {ctor: "Top"};
-   var GameOver = {ctor: "GameOver"};
-   var Start = {ctor: "Start"};
-   var Play = {ctor: "Play"};
    var updatePlayerY = F2(function (delta,
    game) {
       return _U.replace([["y"
                          ,_U.eq(game.state,
-                         Start) ? game.y + $Basics.sin(game.backgroundX / 10) : _U.eq(game.state,
-                         Play) ? game.y + game.vy * $Basics.snd(delta) : game.y]],
+                         $Types.Start) ? game.y + $Basics.sin(game.backgroundX / 10) : _U.eq(game.state,
+                         $Types.Play) ? game.y + game.vy * $Basics.snd(delta) : game.y]],
       game);
    });
    var $ = {ctor: "_Tuple2"
@@ -3345,7 +3274,7 @@ Elm.Main.make = function (_elm) {
    game) {
       return _U.replace([["vy"
                          ,_U.eq(game.state,
-                         GameOver) ? 0 : game.vy - $Basics.snd(delta) * constants.gravity]],
+                         $Types.GameOver) ? 0 : game.vy - $Basics.snd(delta) * constants.gravity]],
       game);
    });
    var updatePlayerVelocity = F2(function (space,
@@ -3361,24 +3290,24 @@ Elm.Main.make = function (_elm) {
                      ,randomizer: A2($Random.$int,
                      constants.minPillarHeight,
                      gameHeight - constants.minPillarHeight - constants.gapHeight)
-                     ,state: Start
+                     ,state: $Types.Start
                      ,timeToPillar: constants.timeBetweenPillars
                      ,vy: 0
                      ,y: 0};
    var transitionState = F2(function (space,
    game) {
       return _U.eq(game.state,
-      GameOver) && space ? defaultGame : _U.replace([["state"
-                                                     ,_U.eq(game.state,
-                                                     Start) && space ? Play : game.state]],
+      $Types.GameOver) && space ? defaultGame : _U.replace([["state"
+                                                            ,_U.eq(game.state,
+                                                            $Types.Start) && space ? $Types.Play : game.state]],
       game);
    });
    var checkFailState = F2(function (delta,
    game) {
       return _U.replace([["state"
                          ,_U.eq(game.state,
-                         Play) && _U.cmp(game.y,
-                         (0 - gameHeight) / 2) < 1 ? GameOver : game.state]],
+                         $Types.Play) && _U.cmp(game.y,
+                         (0 - gameHeight) / 2) < 1 ? $Types.GameOver : game.state]],
       game);
    });
    var updateBackground = F2(function (delta,
@@ -3386,7 +3315,7 @@ Elm.Main.make = function (_elm) {
       return _U.replace([["backgroundX"
                          ,_U.cmp(game.backgroundX,
                          gameWidth) > 0 ? 0 : _U.eq(game.state,
-                         GameOver) ? game.backgroundX : game.backgroundX + $Basics.snd(delta) * constants.backgroundScrollV]],
+                         $Types.GameOver) ? game.backgroundX : game.backgroundX + $Basics.snd(delta) * constants.backgroundScrollV]],
       game);
    });
    var generatePillars = F2(function (time,
@@ -3395,11 +3324,11 @@ Elm.Main.make = function (_elm) {
          var bottomHeight = $Basics.fst($Random.generate(game.randomizer)($Random.initialSeed($Basics.round($Time.inMilliseconds(time)))));
          var topHeight = gameHeight - bottomHeight - constants.gapHeight;
          return $Array.fromList(_L.fromArray([{_: {}
-                                              ,kind: Bottom
+                                              ,kind: $Types.Bottom
                                               ,pillarHeight: bottomHeight
                                               ,x: gameWidth / 2 + $Basics.toFloat(constants.pillarWidth)}
                                              ,{_: {}
-                                              ,kind: Top
+                                              ,kind: $Types.Top
                                               ,pillarHeight: topHeight
                                               ,x: gameWidth / 2 + $Basics.toFloat(constants.pillarWidth)}]));
       }();
@@ -3416,12 +3345,12 @@ Elm.Main.make = function (_elm) {
          game.pillars);
          var timeToPillar = _U.cmp(game.timeToPillar,
          0) < 1 ? constants.timeBetweenPillars : _U.eq(game.state,
-         Play) ? game.timeToPillar - $Basics.snd(delta) : game.timeToPillar;
+         $Types.Play) ? game.timeToPillar - $Basics.snd(delta) : game.timeToPillar;
          var shouldAddPillar = _U.eq(timeToPillar,
          constants.timeBetweenPillars) && _U.eq(game.state,
-         Play);
+         $Types.Play);
          var pillars = !_U.eq(game.state,
-         Play) ? game.pillars : shouldAddPillar ? A2($Array.append,
+         $Types.Play) ? game.pillars : shouldAddPillar ? A2($Array.append,
          A2(generatePillars,
          $Basics.fst(delta),
          game),
@@ -3441,7 +3370,7 @@ Elm.Main.make = function (_elm) {
             case "TimeDelta":
             return updatePillars(input._0)(checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game)))));}
          _U.badCase($moduleName,
-         "between lines 93 and 105");
+         "between lines 56 and 68");
       }();
    });
    var gameState = A3($Signal.foldp,
@@ -3451,9 +3380,9 @@ Elm.Main.make = function (_elm) {
    var pillarToForm = function (c) {
       return function () {
          var y = _U.eq(c.kind,
-         Top) ? gameHeight / 2 - $Basics.toFloat(c.pillarHeight) / 2 : $Basics.toFloat(c.pillarHeight) / 2 - gameHeight / 2;
+         $Types.Top) ? gameHeight / 2 - $Basics.toFloat(c.pillarHeight) / 2 : $Basics.toFloat(c.pillarHeight) / 2 - gameHeight / 2;
          var imageName = _U.eq(c.kind,
-         Top) ? "/images/topRock.png" : "/images/bottomRock.png";
+         $Types.Top) ? "/images/topRock.png" : "/images/bottomRock.png";
          return $Graphics$Collage.move({ctor: "_Tuple2"
                                        ,_0: c.x
                                        ,_1: y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
@@ -3472,9 +3401,9 @@ Elm.Main.make = function (_elm) {
                  pillarToForm,
                  game.pillars);
                  var getReadyAlpha = _U.eq(game.state,
-                 Start) ? 1 : 0;
+                 $Types.Start) ? 1 : 0;
                  var gameOverAlpha = _U.eq(game.state,
-                 GameOver) ? 1 : 0;
+                 $Types.GameOver) ? 1 : 0;
                  var formList = _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
                                                                      ,_0: 0 - game.backgroundX
                                                                      ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
@@ -3511,7 +3440,7 @@ Elm.Main.make = function (_elm) {
                  $Array.toList(pillarForms))));
               }();}
          _U.badCase($moduleName,
-         "between lines 216 and 239");
+         "between lines 179 and 202");
       }();
    });
    var main = A3($Signal.map2,
@@ -3521,14 +3450,6 @@ Elm.Main.make = function (_elm) {
    _elm.Main.values = {_op: _op
                       ,gameHeight: gameHeight
                       ,gameWidth: gameWidth
-                      ,Play: Play
-                      ,Start: Start
-                      ,GameOver: GameOver
-                      ,Top: Top
-                      ,Bottom: Bottom
-                      ,Pillar: Pillar
-                      ,Constants: Constants
-                      ,Game: Game
                       ,constants: constants
                       ,defaultGame: defaultGame
                       ,update: update
@@ -3542,8 +3463,6 @@ Elm.Main.make = function (_elm) {
                       ,updatePlayerVelocity: updatePlayerVelocity
                       ,pillarToForm: pillarToForm
                       ,view: view
-                      ,TimeDelta: TimeDelta
-                      ,Space: Space
                       ,main: main
                       ,gameState: gameState
                       ,delta: delta
@@ -10807,6 +10726,110 @@ Elm.Transform2D.make = function (_elm) {
                              ,scaleX: scaleX
                              ,scaleY: scaleY};
    return _elm.Transform2D.values;
+};
+Elm.Types = Elm.Types || {};
+Elm.Types.make = function (_elm) {
+   "use strict";
+   _elm.Types = _elm.Types || {};
+   if (_elm.Types.values)
+   return _elm.Types.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Types",
+   $Array = Elm.Array.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Random = Elm.Random.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Time = Elm.Time.make(_elm);
+   var Space = function (a) {
+      return {ctor: "Space",_0: a};
+   };
+   var TimeDelta = function (a) {
+      return {ctor: "TimeDelta"
+             ,_0: a};
+   };
+   var Game = F8(function (a,
+   b,
+   c,
+   d,
+   e,
+   f,
+   g,
+   h) {
+      return {_: {}
+             ,backgroundX: c
+             ,foregroundX: b
+             ,pillars: g
+             ,randomizer: h
+             ,state: a
+             ,timeToPillar: f
+             ,vy: e
+             ,y: d};
+   });
+   var Constants = function (a) {
+      return function (b) {
+         return function (c) {
+            return function (d) {
+               return function (e) {
+                  return function (f) {
+                     return function (g) {
+                        return function (h) {
+                           return function (i) {
+                              return function (j) {
+                                 return function (k) {
+                                    return {_: {}
+                                           ,backgroundScrollV: a
+                                           ,foregroundScrollV: b
+                                           ,gapHeight: k
+                                           ,gapToPlaneRatio: j
+                                           ,gravity: e
+                                           ,jumpSpeed: d
+                                           ,minPillarHeight: h
+                                           ,pillarWidth: g
+                                           ,planeHeight: i
+                                           ,playerX: c
+                                           ,timeBetweenPillars: f};
+                                 };
+                              };
+                           };
+                        };
+                     };
+                  };
+               };
+            };
+         };
+      };
+   };
+   var Pillar = F3(function (a,
+   b,
+   c) {
+      return {_: {}
+             ,kind: c
+             ,pillarHeight: b
+             ,x: a};
+   });
+   var Bottom = {ctor: "Bottom"};
+   var Top = {ctor: "Top"};
+   var GameOver = {ctor: "GameOver"};
+   var Start = {ctor: "Start"};
+   var Play = {ctor: "Play"};
+   _elm.Types.values = {_op: _op
+                       ,Play: Play
+                       ,Start: Start
+                       ,GameOver: GameOver
+                       ,Top: Top
+                       ,Bottom: Bottom
+                       ,Pillar: Pillar
+                       ,Constants: Constants
+                       ,Game: Game
+                       ,TimeDelta: TimeDelta
+                       ,Space: Space};
+   return _elm.Types.values;
 };
 Elm.Window = Elm.Window || {};
 Elm.Window.make = function (_elm) {

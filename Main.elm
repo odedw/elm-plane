@@ -8,46 +8,9 @@ import Debug exposing (watch)
 import Array
 import List
 import Random exposing (int, generate, initialSeed, Generator, Seed)
+import Types exposing (..)
 
 (gameWidth,gameHeight) = (800,480)
-
-type State = Play | Start | GameOver
-type Kind = Top | Bottom
-type alias Pillar =
-  { x : Float
-  , pillarHeight: Int
-  , kind : Kind
-  }
-type alias Constants =
-  {
-  backgroundScrollV : Float
-  , foregroundScrollV : Float
-  , playerX : Float
-  , jumpSpeed : Float
-  , gravity : Float
-  , timeBetweenPillars : Float
-  , pillarWidth : Int
-  , minPillarHeight : Int
-  , planeHeight : Int
-  , gapToPlaneRatio : Float
-  , gapHeight : Int
-  }
-type alias Game =
-  { state : State
-  , foregroundX : Float
-  , backgroundX : Float
-  , y : Float
-  , vy : Float
-  , timeToPillar : Float
-  , pillars : Array.Array Pillar
-  , randomizer : Generator Int
-  }
-
-type alias KeyUpdate =
-  Bool -> Game -> Game
-
-type alias TimeUpdate =
-  (Time,Time) -> Game -> Game
 
 constants : Constants
 constants =
@@ -239,10 +202,6 @@ view (w,h) game =
     List.append formList (Array.toList pillarForms)
 
 -- SIGNALS
-type Input =
-    TimeDelta (Time,Time)
-  | Space Bool
-
 main =
   Signal.map2 view Window.dimensions gameState
 
