@@ -13,9 +13,9 @@ import Random exposing (int, generate, initialSeed, Generator, Seed)
 
 type State = Play | Start | GameOver
 type Kind = Top | Bottom
-type alias Column =
+type alias Pillar =
   { x : Float
-  , columnHeight: Int
+  , pillarHeight: Int
   , kind : Kind
   }
 type alias Constants =
@@ -25,9 +25,9 @@ type alias Constants =
   , playerX : Float
   , jumpSpeed : Float
   , gravity : Float
-  , timeBetweenColumns : Float
-  , columnWidth : Int
-  , minColumnHeight : Int
+  , timeBetweenPillars : Float
+  , pillarWidth : Int
+  , minPillarHeight : Int
   , planeHeight : Int
   , gapToPlaneRatio : Float
   , gapHeight : Int
@@ -38,8 +38,8 @@ type alias Game =
   , backgroundX : Float
   , y : Float
   , vy : Float
-  , timeToColumn : Float
-  , columns : Array.Array Column
+  , timeToPillar : Float
+  , pillars : Array.Array Pillar
   , randomizer : Generator Int
   }
 
@@ -62,9 +62,9 @@ constants =
     , playerX = 100 - gameWidth / 2
     , jumpSpeed = 370.0
     , gravity = 1500.0
-    , timeBetweenColumns = 1.8
-    , columnWidth = 30
-    , minColumnHeight = round (gameHeight / 8)
+    , timeBetweenPillars = 1.8
+    , pillarWidth = 30
+    , minPillarHeight = round (gameHeight / 8)
     , planeHeight = planeHeight
     , gapToPlaneRatio = gapToPlaneRatio
     , gapHeight = gapHeight
@@ -79,9 +79,9 @@ defaultGame =
   , backgroundX = 0
   , y = 0
   , vy = 0
-  , timeToColumn = constants.timeBetweenColumns
-  , columns = Array.empty
-  , randomizer = Random.int constants.minColumnHeight (gameHeight - constants.minColumnHeight - constants.gapHeight)
+  , timeToPillar = constants.timeBetweenPillars
+  , pillars = Array.empty
+  , randomizer = Random.int constants.minPillarHeight (gameHeight - constants.minPillarHeight - constants.gapHeight)
   }
 
 -- UPDATE
@@ -98,7 +98,7 @@ update input game =
           |> updateBackground delta
           |> applyPhysics delta
           |> checkFailState delta
-          |> updateColumns delta
+          |> updatePillars delta
       Space space ->
         game
           |> transitionState space
@@ -135,28 +135,28 @@ applyPhysics delta game =
        | otherwise -> game.vy - (snd delta) * constants.gravity
   }
 
-updateColumns : TimeUpdate
-updateColumns delta game =
+updatePillars : TimeUpdate
+updatePillars delta game =
   let
-    timeToColumn =
-      if | game.timeToColumn <= 0 -> constants.timeBetweenColumns
-         | game.state == Play -> game.timeToColumn - (snd delta)
-         | otherwise -> game.timeToColumn
-    shouldAddColumn = timeToColumn == constants.timeBetweenColumns && game.state == Play
-    updatedColumns =
-      Array.map (\c -> {c | x <- c.x - constants.foregroundScrollV * (snd delta)}) game.columns
-    columns =
-      if | game.state /= Play -> game.columns
-         | shouldAddColumn -> Array.append  (generateColumns (fst delta) game) updatedColumns
-         | otherwise -> updatedColumns
+    timeToPillar =
+      if | game.timeToPillar <= 0 -> constants.timeBetweenPillars
+         | game.state == Play -> game.timeToPillar - (snd delta)
+         | otherwise -> game.timeToPillar
+    shouldAddPillar = timeToPillar == constants.timeBetweenPillars && game.state == Play
+    updatedPillars =
+      Array.map (\c -> {c | x <- c.x - constants.foregroundScrollV * (snd delta)}) game.pillars
+    pillars =
+      if | game.state /= Play -> game.pillars
+         | shouldAddPillar -> Array.append  (generatePillars (fst delta) game) updatedPillars
+         | otherwise -> updatedPillars
 
   in
-    {game | timeToColumn <- timeToColumn
-          , columns <- columns
+    {game | timeToPillar <- timeToPillar
+          , pillars <- pillars
     }
 
-generateColumns : Time -> Game -> Array.Array Column
-generateColumns time game =
+generatePillars : Time -> Game -> Array.Array Pillar
+generatePillars time game =
   let
     bottomHeight =
       fst <| generate game.randomizer <| initialSeed <| round <| inMilliseconds time
@@ -166,14 +166,14 @@ generateColumns time game =
     Array.fromList <|
     [
       {
-      x = gameWidth / 2 + (toFloat constants.columnWidth)
-      , columnHeight = bottomHeight
+      x = gameWidth / 2 + (toFloat constants.pillarWidth)
+      , pillarHeight = bottomHeight
       , kind = Bottom
       }
       ,
       {
-      x = gameWidth / 2 + (toFloat constants.columnWidth)
-      , columnHeight = topHeight
+      x = gameWidth / 2 + (toFloat constants.pillarWidth)
+      , pillarHeight = topHeight
       , kind = Top
       }
     ]
@@ -197,17 +197,17 @@ updatePlayerVelocity space game =
   }
 
 -- VIEW
-columnToForm : Column -> Form
-columnToForm c =
+pillarToForm : Pillar -> Form
+pillarToForm c =
   let
     imageName =
       if c.kind == Top then "/images/topRock.png"
       else "/images/bottomRock.png"
     y =
-      if c.kind == Top then (gameHeight/2 - (toFloat c.columnHeight/2))
-      else (toFloat c.columnHeight/2) - (gameHeight/2)
+      if c.kind == Top then (gameHeight/2 - (toFloat c.pillarHeight/2))
+      else (toFloat c.pillarHeight/2) - (gameHeight/2)
   in
-    image constants.columnWidth c.columnHeight imageName |>
+    image constants.pillarWidth c.pillarHeight imageName |>
     toForm |>
     move (c.x, y)
 
@@ -218,8 +218,8 @@ view (w,h) game =
       if game.state == GameOver then 1 else 0
     getReadyAlpha =
       if game.state == Start then 1 else 0
-    columnForms =
-      Array.map columnToForm game.columns
+    pillarForms =
+      Array.map pillarToForm game.pillars
     formList =
       [
          toForm (image gameWidth gameHeight "/images/background.png")
@@ -236,7 +236,7 @@ view (w,h) game =
   in
     container w h middle <|
     collage gameWidth gameHeight <|
-    List.append formList (Array.toList columnForms)
+    List.append formList (Array.toList pillarForms)
 
 -- SIGNALS
 type Input =
