@@ -4,7 +4,9 @@ import Random exposing (int, generate, initialSeed, Generator, Seed)
 import Time exposing (..)
 
 type State = Play | Start | GameOver
+
 type Kind = Top | Bottom
+
 type alias Pillar =
   { x : Float
   , y : Float
@@ -12,9 +14,9 @@ type alias Pillar =
   , kind : Kind
   , passed : Bool
   }
+
 type alias Constants =
-  {
-  backgroundScrollV : Float
+  { backgroundScrollV : Float
   , foregroundScrollV : Float
   , playerX : Float
   , jumpSpeed : Float
@@ -29,6 +31,7 @@ type alias Constants =
   , epsilon : Float
   , randomizer : Generator Int
   }
+
 type alias Game =
   { state : State
   , foregroundX : Float
@@ -47,8 +50,7 @@ type alias TimeUpdate =
   (Time,Time) -> Game -> Game
 
 type Input =
-      TimeDelta (Time,Time)
-    | Space Bool
+      TimeDelta (Time,Time) | Space Bool
 
 (gameWidth,gameHeight) = (480,480)
 
@@ -60,8 +62,7 @@ constants =
     gapHeight = round ((toFloat planeHeight) * gapToPlaneRatio)
     minPillarHeight = round (gameHeight / 8)
   in
-    {
-    backgroundScrollV = 40
+    { backgroundScrollV = 40
     , foregroundScrollV = 150
     , playerX = 100 - gameWidth / 2
     , jumpSpeed = 370.0

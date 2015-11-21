@@ -8,23 +8,20 @@ import Model exposing (..)
 
 update : Input -> Game -> Game
 update input game =
-  -- let
-  --   score = Debug.watch "score" game.score
-  -- in
-    case input of
-      TimeDelta delta ->
-        --TODO: can I pass the delta somehow as well?
-        game
-          |> updatePlayerY delta
-          |> updateBackground delta
-          |> applyPhysics delta
-          |> checkFailState delta
-          |> updatePillars delta
-          |> updateScore delta
-      Space space ->
-        game
-          |> transitionState space
-          |> updatePlayerVelocity space
+  case input of
+    TimeDelta delta ->
+      game
+        |> updatePlayerY delta
+        |> updateBackground delta
+        |> applyPhysics delta
+        |> checkFailState delta
+        |> updatePillars delta
+        |> updateScore delta
+
+    Space space ->
+      game
+        |> transitionState space
+        |> updatePlayerVelocity space
 
 --Time updates
 updatePlayerY : TimeUpdate
@@ -39,23 +36,23 @@ isColliding : Constants -> Game -> Pillar -> Bool
 isColliding constants game pillar =
   let
     r1 =
-      {left = constants.playerX - (toFloat constants.planeWidth)/2 + constants.epsilon
+      { left = constants.playerX - (toFloat constants.planeWidth)/2 + constants.epsilon
       , top = game.y + (toFloat constants.planeHeight)/2
       , right = constants.playerX + (toFloat constants.planeWidth)/2 - constants.epsilon
       , bottom = game.y - (toFloat constants.planeHeight)/2
       }
     r2 =
-      {left = pillar.x - (toFloat constants.pillarWidth)/2 + constants.epsilon
+      { left = pillar.x - (toFloat constants.pillarWidth)/2 + constants.epsilon
       , top = pillar.y + (toFloat pillar.height)/2
       , right = pillar.x + (toFloat constants.pillarWidth)/2 - constants.epsilon
       , bottom = pillar.y - (toFloat pillar.height)/2
       }
   in
      not
-        (r2.left > r1.right ||
-         r2.right < r1.left ||
-         r2.top < r1.bottom ||
-         r2.bottom > r1.top)
+        r2.left > r1.right
+        || r2.right < r1.left
+        || r2.top < r1.bottom
+        || r2.bottom > r1.top
 
 checkFailState : TimeUpdate
 checkFailState delta game =
@@ -63,13 +60,16 @@ checkFailState delta game =
     playerOffScreen =
       game.y <= -gameHeight/2
     collisionPillars =
-      Array.filter (\p -> isColliding constants game p) game.pillars |>
-      Array.length
-    playerCollidedWithPillar = collisionPillars > 0
+      Array.filter (\p -> isColliding constants game p) game.pillars
+      |> Array.length
+    playerCollidedWithPillar =
+      collisionPillars > 0
   in
     {game | state <-
-      if game.state == Play && (playerOffScreen || playerCollidedWithPillar) then GameOver
-      else game.state
+      if game.state == Play && (playerOffScreen || playerCollidedWithPillar) then
+        GameOver
+      else
+        game.state
     }
 
 updateBackground : TimeUpdate
@@ -104,7 +104,7 @@ updatePillars delta game =
          | otherwise -> updatedPillars
 
   in
-    {game | timeToPillar <- timeToPillar
+    { game | timeToPillar <- timeToPillar
           , pillars <- pillars
     }
 
@@ -146,13 +146,18 @@ updateScore delta game =
   in
     {game |
       pillars <- pillars
-    , score <- if length > 0 then game.score + 1 else game.score
+    , score <-
+      if length > 0 then
+        game.score + 1
+      else
+        game.score
     }
 
 --Input updates
 transitionState : KeyUpdate
 transitionState space game =
-  if game.state == GameOver && game.y <= -gameHeight/2 && space then defaultGame --Reset
+  if game.state == GameOver && game.y <= -gameHeight/2 && space then
+    defaultGame --Reset
   else
     {game |
       state <-
@@ -163,6 +168,8 @@ transitionState space game =
 updatePlayerVelocity : KeyUpdate
 updatePlayerVelocity space game =
   {game | vy <-
-    if game.state == Play && space then constants.jumpSpeed
-    else game.vy
+    if game.state == Play && space then
+      constants.jumpSpeed
+    else
+      game.vy
   }

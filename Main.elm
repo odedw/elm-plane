@@ -20,8 +20,9 @@ gameState : Signal Game
 gameState =
     Signal.foldp update defaultGame input
 
-delta = timestamp <|
-      Signal.map inSeconds (fps 45)
+delta =
+  timestamp
+  <| Signal.map inSeconds (fps 45)
 
 input : Signal Input
 input =

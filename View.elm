@@ -13,12 +13,14 @@ pillarToForm : Pillar -> Form
 pillarToForm p =
   let
     imageName =
-      if p.kind == Top then "/images/topRock.png"
-      else "/images/bottomRock.png"
+      if p.kind == Top then
+        "/images/topRock.png"
+      else
+        "/images/bottomRock.png"
   in
-    image constants.pillarWidth p.height imageName |>
-    toForm |>
-    move (p.x, p.y)
+    image constants.pillarWidth p.height imageName
+    |> toForm
+    |> move (p.x, p.y)
 
 view : (Int,Int) -> Game -> Element
 view (w,h) game =
@@ -42,25 +44,25 @@ view (w,h) game =
         |> move (0, gameHeight/2 - 70)
 
     textForms =
-      if | game.state == GameOver -> [  toForm (image 400 70 "/images/textGameOver.png")
-                                     ,  score
+      if | game.state == GameOver -> [ toForm (image 400 70 "/images/textGameOver.png")
+                                     , score
                                      ]
-         | game.state == Start -> [  toForm (image 400 70 "/images/textGetReady.png")
-                                     ,  score
-                                     ]
+         | game.state == Start -> [ toForm (image 400 70 "/images/textGetReady.png")
+                                  , score
+                                  ]
          | otherwise -> [score]
 
     playerForm =
-      [toForm (image constants.planeWidth constants.planeHeight "/images/plane.gif")
-      |> move (constants.playerX, game.y)]
+      [ toForm (image constants.planeWidth constants.planeHeight "/images/plane.gif")
+        |> move (constants.playerX, game.y)
+      ]
 
     fullFormList =
       List.append backgroundForms
       <| List.append playerForm
       <| List.append pillarForms
       <| textForms
-
   in
-    container w h middle <|
-    collage gameWidth gameHeight <|
-    fullFormList
+    container w h middle
+    <| collage gameWidth gameHeight
+    <| fullFormList
