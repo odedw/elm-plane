@@ -14,9 +14,9 @@ pillarToForm p =
   let
     imageName =
       if p.kind == Top then
-        "/images/topRock.png"
+        "images/topRock.png"
       else
-        "/images/bottomRock.png"
+        "images/bottomRock.png"
   in
     image constants.pillarWidth p.height imageName
     |> toForm
@@ -30,9 +30,9 @@ view (w,h) game =
       |> Array.toList
 
     backgroundForms =
-      [ toForm (image gameWidth gameHeight "/images/background.png")
+      [ toForm (image gameWidth gameHeight "images/background.png")
         |> move (-game.backgroundX, 0)
-      , toForm (image gameWidth gameHeight "/images/background.png")
+      , toForm (image gameWidth gameHeight "images/background.png")
         |> move (gameWidth - game.backgroundX, 0)
       ]
     score =
@@ -50,12 +50,12 @@ view (w,h) game =
       |> move (0, gameHeight/2 - 70)
 
     textForms =
-      if | game.state == GameOver -> [ toForm (image 250 45 "/images/textGameOver.png")
+      if | game.state == GameOver -> [ toForm (image 250 45 "images/textGameOver.png")
                                        |> move (0,70)
                                      , scoreOutlineForm
                                      , scoreForm
                                      ]
-         | game.state == Start -> [ toForm (image 250 45 "/images/textGetReady.png")
+         | game.state == Start -> [ toForm (image 250 45 "images/textGetReady.png")
                                     |> move (0,70)
                                   , scoreOutlineForm
                                   , scoreForm
@@ -65,7 +65,7 @@ view (w,h) game =
                         ]
 
     playerForm =
-      [ toForm (image constants.planeWidth constants.planeHeight "/images/plane.gif")
+      [ toForm (image constants.planeWidth constants.planeHeight "images/plane.gif")
         |> move (constants.playerX, game.y)
       ]
 

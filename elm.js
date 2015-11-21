@@ -10900,7 +10900,7 @@ Elm.View.make = function (_elm) {
    var pillarToForm = function (p) {
       return function () {
          var imageName = _U.eq(p.kind,
-         $Model.Top) ? "/images/topRock.png" : "/images/bottomRock.png";
+         $Model.Top) ? "images/topRock.png" : "images/bottomRock.png";
          return $Graphics$Collage.move({ctor: "_Tuple2"
                                        ,_0: p.x
                                        ,_1: p.y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
@@ -10920,7 +10920,7 @@ Elm.View.make = function (_elm) {
                                                                        ,_1: game.y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
                  $Model.constants.planeWidth,
                  $Model.constants.planeHeight,
-                 "/images/plane.gif")))]);
+                 "images/plane.gif")))]);
                  var score = $Text.bold($Text.color(A3($Color.rgb,
                  50,
                  160,
@@ -10940,7 +10940,7 @@ Elm.View.make = function (_elm) {
                                                                          ,_1: 70})($Graphics$Collage.toForm(A3($Graphics$Element.image,
                                                  250,
                                                  45,
-                                                 "/images/textGameOver.png")))
+                                                 "images/textGameOver.png")))
                                                  ,scoreOutlineForm
                                                  ,scoreForm]) : _U.eq(game.state,
                  $Model.Start) ? _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
@@ -10948,7 +10948,7 @@ Elm.View.make = function (_elm) {
                                                                       ,_1: 70})($Graphics$Collage.toForm(A3($Graphics$Element.image,
                                               250,
                                               45,
-                                              "/images/textGetReady.png")))
+                                              "images/textGetReady.png")))
                                               ,scoreOutlineForm
                                               ,scoreForm]) : _L.fromArray([scoreOutlineForm
                                                                           ,scoreForm]);
@@ -10957,13 +10957,13 @@ Elm.View.make = function (_elm) {
                                                                             ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
                                                     $Model.gameWidth,
                                                     $Model.gameHeight,
-                                                    "/images/background.png")))
+                                                    "images/background.png")))
                                                     ,$Graphics$Collage.move({ctor: "_Tuple2"
                                                                             ,_0: $Model.gameWidth - game.backgroundX
                                                                             ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
                                                     $Model.gameWidth,
                                                     $Model.gameHeight,
-                                                    "/images/background.png")))]);
+                                                    "images/background.png")))]);
                  var pillarForms = $Array.toList(A2($Array.map,
                  pillarToForm,
                  game.pillars));
