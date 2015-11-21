@@ -3218,313 +3218,35 @@ Elm.Main.make = function (_elm) {
    _U = _N.Utils.make(_elm),
    _L = _N.List.make(_elm),
    $moduleName = "Main",
-   $Array = Elm.Array.make(_elm),
    $Basics = Elm.Basics.make(_elm),
-   $Color = Elm.Color.make(_elm),
-   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
-   $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $Keyboard = Elm.Keyboard.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
-   $Random = Elm.Random.make(_elm),
+   $Model = Elm.Model.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
-   $Text = Elm.Text.make(_elm),
    $Time = Elm.Time.make(_elm),
-   $Types = Elm.Types.make(_elm),
-   $Utils = Elm.Utils.make(_elm),
+   $Update = Elm.Update.make(_elm),
+   $View = Elm.View.make(_elm),
    $Window = Elm.Window.make(_elm);
    var delta = $Time.timestamp(A2($Signal.map,
    $Time.inSeconds,
    $Time.fps(45)));
    var input = $Signal.mergeMany(_L.fromArray([A2($Signal.map,
-                                              $Types.TimeDelta,
+                                              $Model.TimeDelta,
                                               delta)
                                               ,A2($Signal.map,
-                                              $Types.Space,
+                                              $Model.Space,
                                               $Keyboard.space)]));
-   var $ = {ctor: "_Tuple2"
-           ,_0: 800
-           ,_1: 480},
-   gameWidth = $._0,
-   gameHeight = $._1;
-   var constants = function () {
-      var minPillarHeight = $Basics.round(gameHeight / 8);
-      var gapToPlaneRatio = 3.5;
-      var planeHeight = 35;
-      var gapHeight = $Basics.round($Basics.toFloat(planeHeight) * gapToPlaneRatio);
-      return {_: {}
-             ,backgroundScrollV: 40
-             ,epsilon: 5
-             ,foregroundScrollV: 150
-             ,gapHeight: gapHeight
-             ,gapToPlaneRatio: gapToPlaneRatio
-             ,gravity: 1500.0
-             ,jumpSpeed: 370.0
-             ,minPillarHeight: minPillarHeight
-             ,pillarWidth: 30
-             ,planeHeight: planeHeight
-             ,planeWidth: 60
-             ,playerX: 100 - gameWidth / 2
-             ,randomizer: A2($Random.$int,
-             minPillarHeight,
-             gameHeight - minPillarHeight - gapHeight)
-             ,timeBetweenPillars: 1.6};
-   }();
-   var defaultGame = {_: {}
-                     ,backgroundX: 0
-                     ,foregroundX: 0
-                     ,pillars: $Array.empty
-                     ,score: 0
-                     ,state: $Types.Start
-                     ,timeToPillar: constants.timeBetweenPillars
-                     ,vy: 0
-                     ,y: 0};
-   var updateScore = F2(function (delta,
-   game) {
-      return function () {
-         var length = $Array.length(A2($Array.filter,
-         function (p) {
-            return $Basics.not(p.passed) && _U.cmp(p.x,
-            constants.playerX) < 0;
-         },
-         game.pillars));
-         var pillars = _U.cmp(length,
-         0) > 0 ? A2($Array.map,
-         function (p) {
-            return $Basics.not(p.passed) && _U.cmp(p.x,
-            constants.playerX) < 0 ? _U.replace([["passed"
-                                                 ,true]],
-            p) : p;
-         },
-         game.pillars) : game.pillars;
-         return _U.replace([["pillars"
-                            ,pillars]
-                           ,["score"
-                            ,_U.cmp(length,
-                            0) > 0 ? game.score + 1 : game.score]],
-         game);
-      }();
-   });
-   var updatePlayerVelocity = F2(function (space,
-   game) {
-      return _U.replace([["vy"
-                         ,_U.eq(game.state,
-                         $Types.Play) && space ? constants.jumpSpeed : game.vy]],
-      game);
-   });
-   var pillarToForm = function (p) {
-      return function () {
-         var imageName = _U.eq(p.kind,
-         $Types.Top) ? "/images/topRock.png" : "/images/bottomRock.png";
-         return $Graphics$Collage.move({ctor: "_Tuple2"
-                                       ,_0: p.x
-                                       ,_1: p.y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
-         constants.pillarWidth,
-         p.height,
-         imageName)));
-      }();
-   };
-   var updatePlayerY = F2(function (delta,
-   game) {
-      return _U.replace([["y"
-                         ,_U.eq(game.state,
-                         $Types.Start) ? game.y + $Basics.sin(game.backgroundX / 10) : _U.eq(game.state,
-                         $Types.Play) || _U.eq(game.state,
-                         $Types.GameOver) && _U.cmp(game.y,
-                         (0 - gameHeight) / 2) > 0 ? game.y + game.vy * $Basics.snd(delta) : game.y]],
-      game);
-   });
-   var checkFailState = F2(function (delta,
-   game) {
-      return function () {
-         var collisionPillars = $Array.length(A2($Array.filter,
-         function (p) {
-            return A3($Utils.isColliding,
-            constants,
-            game,
-            p);
-         },
-         game.pillars));
-         var playerCollidedWithPillar = _U.cmp(collisionPillars,
-         0) > 0;
-         var playerOffScreen = _U.cmp(game.y,
-         (0 - gameHeight) / 2) < 1;
-         return _U.replace([["state"
-                            ,_U.eq(game.state,
-                            $Types.Play) && (playerOffScreen || playerCollidedWithPillar) ? $Types.GameOver : game.state]],
-         game);
-      }();
-   });
-   var updateBackground = F2(function (delta,
-   game) {
-      return _U.replace([["backgroundX"
-                         ,_U.cmp(game.backgroundX,
-                         gameWidth) > 0 ? 0 : _U.eq(game.state,
-                         $Types.GameOver) ? game.backgroundX : game.backgroundX + $Basics.snd(delta) * constants.backgroundScrollV]],
-      game);
-   });
-   var applyPhysics = F2(function (delta,
-   game) {
-      return _U.replace([["vy"
-                         ,_U.eq(game.state,
-                         $Types.GameOver) && _U.cmp(game.y,
-                         (0 - gameHeight) / 2) < 1 ? 0 : game.vy - $Basics.snd(delta) * constants.gravity]],
-      game);
-   });
-   var generatePillars = F2(function (time,
-   game) {
-      return function () {
-         var bottomHeight = $Basics.fst($Random.generate(constants.randomizer)($Random.initialSeed($Basics.round($Time.inMilliseconds(time)))));
-         var topHeight = gameHeight - bottomHeight - constants.gapHeight;
-         return $Array.fromList(_L.fromArray([{_: {}
-                                              ,height: bottomHeight
-                                              ,kind: $Types.Bottom
-                                              ,passed: false
-                                              ,x: gameWidth / 2 + $Basics.toFloat(constants.pillarWidth)
-                                              ,y: $Basics.toFloat(bottomHeight) / 2 - gameHeight / 2}
-                                             ,{_: {}
-                                              ,height: topHeight
-                                              ,kind: $Types.Top
-                                              ,passed: false
-                                              ,x: gameWidth / 2 + $Basics.toFloat(constants.pillarWidth)
-                                              ,y: gameHeight / 2 - $Basics.toFloat(topHeight) / 2}]));
-      }();
-   });
-   var updatePillars = F2(function (delta,
-   game) {
-      return function () {
-         var updatedPillars = $Array.filter(function (p) {
-            return _U.cmp(p.x,
-            0 - gameWidth / 2) > 0;
-         })(A2($Array.map,
-         function (p) {
-            return _U.replace([["x"
-                               ,p.x - constants.foregroundScrollV * $Basics.snd(delta)]],
-            p);
-         },
-         game.pillars));
-         var timeToPillar = _U.cmp(game.timeToPillar,
-         0) < 1 ? constants.timeBetweenPillars : _U.eq(game.state,
-         $Types.Play) ? game.timeToPillar - $Basics.snd(delta) : game.timeToPillar;
-         var shouldAddPillar = _U.eq(timeToPillar,
-         constants.timeBetweenPillars) && _U.eq(game.state,
-         $Types.Play);
-         var pillars = !_U.eq(game.state,
-         $Types.Play) ? game.pillars : shouldAddPillar ? A2($Array.append,
-         A2(generatePillars,
-         $Basics.fst(delta),
-         game),
-         updatedPillars) : updatedPillars;
-         return _U.replace([["timeToPillar"
-                            ,timeToPillar]
-                           ,["pillars",pillars]],
-         game);
-      }();
-   });
-   var transitionState = F2(function (space,
-   game) {
-      return _U.eq(game.state,
-      $Types.GameOver) && (_U.cmp(game.y,
-      (0 - gameHeight) / 2) < 1 && space) ? defaultGame : _U.replace([["state"
-                                                                      ,_U.eq(game.state,
-                                                                      $Types.Start) && space ? $Types.Play : game.state]],
-      game);
-   });
-   var update = F2(function (input,
-   game) {
-      return function () {
-         switch (input.ctor)
-         {case "Space":
-            return updatePlayerVelocity(input._0)(transitionState(input._0)(game));
-            case "TimeDelta":
-            return updateScore(input._0)(updatePillars(input._0)(checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game))))));}
-         _U.badCase($moduleName,
-         "between lines 61 and 74");
-      }();
-   });
    var gameState = A3($Signal.foldp,
-   update,
-   defaultGame,
+   $Update.update,
+   $Model.defaultGame,
    input);
-   var view = F2(function (_v3,
-   game) {
-      return function () {
-         switch (_v3.ctor)
-         {case "_Tuple2":
-            return function () {
-                 var textLineStyle = $Graphics$Collage.solid($Color.black);
-                 var score = $Graphics$Collage.move({ctor: "_Tuple2"
-                                                    ,_0: 0
-                                                    ,_1: gameHeight / 2 - 70})($Graphics$Collage.outlinedText(textLineStyle)($Text.bold($Text.color($Color.yellow)($Text.height(50)($Text.fromString($Basics.toString(game.score)))))));
-                 var pillarForms = A2($Array.map,
-                 pillarToForm,
-                 game.pillars);
-                 var getReadyAlpha = _U.eq(game.state,
-                 $Types.Start) ? 1 : 0;
-                 var gameOverAlpha = _U.eq(game.state,
-                 $Types.GameOver) ? 1 : 0;
-                 var formList = _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
-                                                                     ,_0: 0 - game.backgroundX
-                                                                     ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                             gameWidth,
-                                             gameHeight,
-                                             "/images/background.png")))
-                                             ,$Graphics$Collage.move({ctor: "_Tuple2"
-                                                                     ,_0: gameWidth - game.backgroundX
-                                                                     ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                             gameWidth,
-                                             gameHeight,
-                                             "/images/background.png")))
-                                             ,$Graphics$Collage.move({ctor: "_Tuple2"
-                                                                     ,_0: constants.playerX
-                                                                     ,_1: game.y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                             constants.planeWidth,
-                                             constants.planeHeight,
-                                             "/images/plane.gif")))
-                                             ,$Graphics$Collage.alpha(gameOverAlpha)($Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                             400,
-                                             70,
-                                             "/images/textGameOver.png")))
-                                             ,$Graphics$Collage.alpha(getReadyAlpha)($Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                             400,
-                                             70,
-                                             "/images/textGetReady.png")))]);
-                 var fullFormList = $List.append(formList)($Array.toList(A2($Array.push,
-                 score,
-                 pillarForms)));
-                 return A3($Graphics$Element.container,
-                 _v3._0,
-                 _v3._1,
-                 $Graphics$Element.middle)(A2($Graphics$Collage.collage,
-                 gameWidth,
-                 gameHeight)(fullFormList));
-              }();}
-         _U.badCase($moduleName,
-         "between lines 209 and 247");
-      }();
-   });
    var main = A3($Signal.map2,
-   view,
+   $View.view,
    $Window.dimensions,
    gameState);
    _elm.Main.values = {_op: _op
-                      ,gameHeight: gameHeight
-                      ,gameWidth: gameWidth
-                      ,constants: constants
-                      ,defaultGame: defaultGame
-                      ,update: update
-                      ,updatePlayerY: updatePlayerY
-                      ,checkFailState: checkFailState
-                      ,updateBackground: updateBackground
-                      ,applyPhysics: applyPhysics
-                      ,updatePillars: updatePillars
-                      ,generatePillars: generatePillars
-                      ,updateScore: updateScore
-                      ,transitionState: transitionState
-                      ,updatePlayerVelocity: updatePlayerVelocity
-                      ,pillarToForm: pillarToForm
-                      ,view: view
                       ,main: main
                       ,gameState: gameState
                       ,delta: delta
@@ -3603,6 +3325,164 @@ Elm.Maybe.make = function (_elm) {
                        ,Just: Just
                        ,Nothing: Nothing};
    return _elm.Maybe.values;
+};
+Elm.Model = Elm.Model || {};
+Elm.Model.make = function (_elm) {
+   "use strict";
+   _elm.Model = _elm.Model || {};
+   if (_elm.Model.values)
+   return _elm.Model.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "Model",
+   $Array = Elm.Array.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Random = Elm.Random.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Time = Elm.Time.make(_elm);
+   var $ = {ctor: "_Tuple2"
+           ,_0: 800
+           ,_1: 480},
+   gameWidth = $._0,
+   gameHeight = $._1;
+   var constants = function () {
+      var minPillarHeight = $Basics.round(gameHeight / 8);
+      var gapToPlaneRatio = 3.5;
+      var planeHeight = 35;
+      var gapHeight = $Basics.round($Basics.toFloat(planeHeight) * gapToPlaneRatio);
+      return {_: {}
+             ,backgroundScrollV: 40
+             ,epsilon: 5
+             ,foregroundScrollV: 150
+             ,gapHeight: gapHeight
+             ,gapToPlaneRatio: gapToPlaneRatio
+             ,gravity: 1500.0
+             ,jumpSpeed: 370.0
+             ,minPillarHeight: minPillarHeight
+             ,pillarWidth: 30
+             ,planeHeight: planeHeight
+             ,planeWidth: 60
+             ,playerX: 100 - gameWidth / 2
+             ,randomizer: A2($Random.$int,
+             minPillarHeight,
+             gameHeight - minPillarHeight - gapHeight)
+             ,timeBetweenPillars: 1.6};
+   }();
+   var Space = function (a) {
+      return {ctor: "Space",_0: a};
+   };
+   var TimeDelta = function (a) {
+      return {ctor: "TimeDelta"
+             ,_0: a};
+   };
+   var Game = F8(function (a,
+   b,
+   c,
+   d,
+   e,
+   f,
+   g,
+   h) {
+      return {_: {}
+             ,backgroundX: c
+             ,foregroundX: b
+             ,pillars: g
+             ,score: h
+             ,state: a
+             ,timeToPillar: f
+             ,vy: e
+             ,y: d};
+   });
+   var Constants = function (a) {
+      return function (b) {
+         return function (c) {
+            return function (d) {
+               return function (e) {
+                  return function (f) {
+                     return function (g) {
+                        return function (h) {
+                           return function (i) {
+                              return function (j) {
+                                 return function (k) {
+                                    return function (l) {
+                                       return function (m) {
+                                          return function (n) {
+                                             return {_: {}
+                                                    ,backgroundScrollV: a
+                                                    ,epsilon: m
+                                                    ,foregroundScrollV: b
+                                                    ,gapHeight: l
+                                                    ,gapToPlaneRatio: k
+                                                    ,gravity: e
+                                                    ,jumpSpeed: d
+                                                    ,minPillarHeight: h
+                                                    ,pillarWidth: g
+                                                    ,planeHeight: i
+                                                    ,planeWidth: j
+                                                    ,playerX: c
+                                                    ,randomizer: n
+                                                    ,timeBetweenPillars: f};
+                                          };
+                                       };
+                                    };
+                                 };
+                              };
+                           };
+                        };
+                     };
+                  };
+               };
+            };
+         };
+      };
+   };
+   var Pillar = F5(function (a,
+   b,
+   c,
+   d,
+   e) {
+      return {_: {}
+             ,height: c
+             ,kind: d
+             ,passed: e
+             ,x: a
+             ,y: b};
+   });
+   var Bottom = {ctor: "Bottom"};
+   var Top = {ctor: "Top"};
+   var GameOver = {ctor: "GameOver"};
+   var Start = {ctor: "Start"};
+   var defaultGame = {_: {}
+                     ,backgroundX: 0
+                     ,foregroundX: 0
+                     ,pillars: $Array.empty
+                     ,score: 0
+                     ,state: Start
+                     ,timeToPillar: constants.timeBetweenPillars
+                     ,vy: 0
+                     ,y: 0};
+   var Play = {ctor: "Play"};
+   _elm.Model.values = {_op: _op
+                       ,Play: Play
+                       ,Start: Start
+                       ,GameOver: GameOver
+                       ,Top: Top
+                       ,Bottom: Bottom
+                       ,Pillar: Pillar
+                       ,Constants: Constants
+                       ,Game: Game
+                       ,TimeDelta: TimeDelta
+                       ,Space: Space
+                       ,gameHeight: gameHeight
+                       ,gameWidth: gameWidth
+                       ,constants: constants
+                       ,defaultGame: defaultGame};
+   return _elm.Model.values;
 };
 Elm.Native.Array = {};
 Elm.Native.Array.make = function(localRuntime) {
@@ -10789,140 +10669,134 @@ Elm.Transform2D.make = function (_elm) {
                              ,scaleY: scaleY};
    return _elm.Transform2D.values;
 };
-Elm.Types = Elm.Types || {};
-Elm.Types.make = function (_elm) {
+Elm.Update = Elm.Update || {};
+Elm.Update.make = function (_elm) {
    "use strict";
-   _elm.Types = _elm.Types || {};
-   if (_elm.Types.values)
-   return _elm.Types.values;
+   _elm.Update = _elm.Update || {};
+   if (_elm.Update.values)
+   return _elm.Update.values;
    var _op = {},
    _N = Elm.Native,
    _U = _N.Utils.make(_elm),
    _L = _N.List.make(_elm),
-   $moduleName = "Types",
+   $moduleName = "Update",
    $Array = Elm.Array.make(_elm),
    $Basics = Elm.Basics.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
+   $Model = Elm.Model.make(_elm),
    $Random = Elm.Random.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
    $Time = Elm.Time.make(_elm);
-   var Space = function (a) {
-      return {ctor: "Space",_0: a};
-   };
-   var TimeDelta = function (a) {
-      return {ctor: "TimeDelta"
-             ,_0: a};
-   };
-   var Game = F8(function (a,
-   b,
-   c,
-   d,
-   e,
-   f,
-   g,
-   h) {
-      return {_: {}
-             ,backgroundX: c
-             ,foregroundX: b
-             ,pillars: g
-             ,score: h
-             ,state: a
-             ,timeToPillar: f
-             ,vy: e
-             ,y: d};
+   var updatePlayerVelocity = F2(function (space,
+   game) {
+      return _U.replace([["vy"
+                         ,_U.eq(game.state,
+                         $Model.Play) && space ? $Model.constants.jumpSpeed : game.vy]],
+      game);
    });
-   var Constants = function (a) {
-      return function (b) {
-         return function (c) {
-            return function (d) {
-               return function (e) {
-                  return function (f) {
-                     return function (g) {
-                        return function (h) {
-                           return function (i) {
-                              return function (j) {
-                                 return function (k) {
-                                    return function (l) {
-                                       return function (m) {
-                                          return function (n) {
-                                             return {_: {}
-                                                    ,backgroundScrollV: a
-                                                    ,epsilon: m
-                                                    ,foregroundScrollV: b
-                                                    ,gapHeight: l
-                                                    ,gapToPlaneRatio: k
-                                                    ,gravity: e
-                                                    ,jumpSpeed: d
-                                                    ,minPillarHeight: h
-                                                    ,pillarWidth: g
-                                                    ,planeHeight: i
-                                                    ,planeWidth: j
-                                                    ,playerX: c
-                                                    ,randomizer: n
-                                                    ,timeBetweenPillars: f};
-                                          };
-                                       };
-                                    };
-                                 };
-                              };
-                           };
-                        };
-                     };
-                  };
-               };
-            };
-         };
-      };
-   };
-   var Pillar = F5(function (a,
-   b,
-   c,
-   d,
-   e) {
-      return {_: {}
-             ,height: c
-             ,kind: d
-             ,passed: e
-             ,x: a
-             ,y: b};
+   var transitionState = F2(function (space,
+   game) {
+      return _U.eq(game.state,
+      $Model.GameOver) && (_U.cmp(game.y,
+      (0 - $Model.gameHeight) / 2) < 1 && space) ? $Model.defaultGame : _U.replace([["state"
+                                                                                    ,_U.eq(game.state,
+                                                                                    $Model.Start) && space ? $Model.Play : game.state]],
+      game);
    });
-   var Bottom = {ctor: "Bottom"};
-   var Top = {ctor: "Top"};
-   var GameOver = {ctor: "GameOver"};
-   var Start = {ctor: "Start"};
-   var Play = {ctor: "Play"};
-   _elm.Types.values = {_op: _op
-                       ,Play: Play
-                       ,Start: Start
-                       ,GameOver: GameOver
-                       ,Top: Top
-                       ,Bottom: Bottom
-                       ,Pillar: Pillar
-                       ,Constants: Constants
-                       ,Game: Game
-                       ,TimeDelta: TimeDelta
-                       ,Space: Space};
-   return _elm.Types.values;
-};
-Elm.Utils = Elm.Utils || {};
-Elm.Utils.make = function (_elm) {
-   "use strict";
-   _elm.Utils = _elm.Utils || {};
-   if (_elm.Utils.values)
-   return _elm.Utils.values;
-   var _op = {},
-   _N = Elm.Native,
-   _U = _N.Utils.make(_elm),
-   _L = _N.List.make(_elm),
-   $moduleName = "Utils",
-   $Basics = Elm.Basics.make(_elm),
-   $List = Elm.List.make(_elm),
-   $Maybe = Elm.Maybe.make(_elm),
-   $Result = Elm.Result.make(_elm),
-   $Signal = Elm.Signal.make(_elm),
-   $Types = Elm.Types.make(_elm);
+   var updateScore = F2(function (delta,
+   game) {
+      return function () {
+         var length = $Array.length(A2($Array.filter,
+         function (p) {
+            return $Basics.not(p.passed) && _U.cmp(p.x,
+            $Model.constants.playerX) < 0;
+         },
+         game.pillars));
+         var pillars = _U.cmp(length,
+         0) > 0 ? A2($Array.map,
+         function (p) {
+            return $Basics.not(p.passed) && _U.cmp(p.x,
+            $Model.constants.playerX) < 0 ? _U.replace([["passed"
+                                                        ,true]],
+            p) : p;
+         },
+         game.pillars) : game.pillars;
+         return _U.replace([["pillars"
+                            ,pillars]
+                           ,["score"
+                            ,_U.cmp(length,
+                            0) > 0 ? game.score + 1 : game.score]],
+         game);
+      }();
+   });
+   var generatePillars = F2(function (time,
+   game) {
+      return function () {
+         var bottomHeight = $Basics.fst($Random.generate($Model.constants.randomizer)($Random.initialSeed($Basics.round($Time.inMilliseconds(time)))));
+         var topHeight = $Model.gameHeight - bottomHeight - $Model.constants.gapHeight;
+         return $Array.fromList(_L.fromArray([{_: {}
+                                              ,height: bottomHeight
+                                              ,kind: $Model.Bottom
+                                              ,passed: false
+                                              ,x: $Model.gameWidth / 2 + $Basics.toFloat($Model.constants.pillarWidth)
+                                              ,y: $Basics.toFloat(bottomHeight) / 2 - $Model.gameHeight / 2}
+                                             ,{_: {}
+                                              ,height: topHeight
+                                              ,kind: $Model.Top
+                                              ,passed: false
+                                              ,x: $Model.gameWidth / 2 + $Basics.toFloat($Model.constants.pillarWidth)
+                                              ,y: $Model.gameHeight / 2 - $Basics.toFloat(topHeight) / 2}]));
+      }();
+   });
+   var updatePillars = F2(function (delta,
+   game) {
+      return function () {
+         var updatedPillars = $Array.filter(function (p) {
+            return _U.cmp(p.x,
+            0 - $Model.gameWidth / 2) > 0;
+         })(A2($Array.map,
+         function (p) {
+            return _U.replace([["x"
+                               ,p.x - $Model.constants.foregroundScrollV * $Basics.snd(delta)]],
+            p);
+         },
+         game.pillars));
+         var timeToPillar = _U.cmp(game.timeToPillar,
+         0) < 1 ? $Model.constants.timeBetweenPillars : _U.eq(game.state,
+         $Model.Play) ? game.timeToPillar - $Basics.snd(delta) : game.timeToPillar;
+         var shouldAddPillar = _U.eq(timeToPillar,
+         $Model.constants.timeBetweenPillars) && _U.eq(game.state,
+         $Model.Play);
+         var pillars = !_U.eq(game.state,
+         $Model.Play) ? game.pillars : shouldAddPillar ? A2($Array.append,
+         A2(generatePillars,
+         $Basics.fst(delta),
+         game),
+         updatedPillars) : updatedPillars;
+         return _U.replace([["timeToPillar"
+                            ,timeToPillar]
+                           ,["pillars",pillars]],
+         game);
+      }();
+   });
+   var applyPhysics = F2(function (delta,
+   game) {
+      return _U.replace([["vy"
+                         ,_U.eq(game.state,
+                         $Model.GameOver) && _U.cmp(game.y,
+                         (0 - $Model.gameHeight) / 2) < 1 ? 0 : game.vy - $Basics.snd(delta) * $Model.constants.gravity]],
+      game);
+   });
+   var updateBackground = F2(function (delta,
+   game) {
+      return _U.replace([["backgroundX"
+                         ,_U.cmp(game.backgroundX,
+                         $Model.gameWidth) > 0 ? 0 : _U.eq(game.state,
+                         $Model.GameOver) ? game.backgroundX : game.backgroundX + $Basics.snd(delta) * $Model.constants.backgroundScrollV]],
+      game);
+   });
    var isColliding = F3(function (constants,
    game,
    pillar) {
@@ -10944,9 +10818,158 @@ Elm.Utils.make = function (_elm) {
          r1.top) > 0)));
       }();
    });
-   _elm.Utils.values = {_op: _op
-                       ,isColliding: isColliding};
-   return _elm.Utils.values;
+   var checkFailState = F2(function (delta,
+   game) {
+      return function () {
+         var collisionPillars = $Array.length(A2($Array.filter,
+         function (p) {
+            return A3(isColliding,
+            $Model.constants,
+            game,
+            p);
+         },
+         game.pillars));
+         var playerCollidedWithPillar = _U.cmp(collisionPillars,
+         0) > 0;
+         var playerOffScreen = _U.cmp(game.y,
+         (0 - $Model.gameHeight) / 2) < 1;
+         return _U.replace([["state"
+                            ,_U.eq(game.state,
+                            $Model.Play) && (playerOffScreen || playerCollidedWithPillar) ? $Model.GameOver : game.state]],
+         game);
+      }();
+   });
+   var updatePlayerY = F2(function (delta,
+   game) {
+      return _U.replace([["y"
+                         ,_U.eq(game.state,
+                         $Model.Start) ? game.y + $Basics.sin(game.backgroundX / 10) : _U.eq(game.state,
+                         $Model.Play) || _U.eq(game.state,
+                         $Model.GameOver) && _U.cmp(game.y,
+                         (0 - $Model.gameHeight) / 2) > 0 ? game.y + game.vy * $Basics.snd(delta) : game.y]],
+      game);
+   });
+   var update = F2(function (input,
+   game) {
+      return function () {
+         switch (input.ctor)
+         {case "Space":
+            return updatePlayerVelocity(input._0)(transitionState(input._0)(game));
+            case "TimeDelta":
+            return updateScore(input._0)(updatePillars(input._0)(checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game))))));}
+         _U.badCase($moduleName,
+         "between lines 14 and 27");
+      }();
+   });
+   _elm.Update.values = {_op: _op
+                        ,update: update
+                        ,updatePlayerY: updatePlayerY
+                        ,isColliding: isColliding
+                        ,checkFailState: checkFailState
+                        ,updateBackground: updateBackground
+                        ,applyPhysics: applyPhysics
+                        ,updatePillars: updatePillars
+                        ,generatePillars: generatePillars
+                        ,updateScore: updateScore
+                        ,transitionState: transitionState
+                        ,updatePlayerVelocity: updatePlayerVelocity};
+   return _elm.Update.values;
+};
+Elm.View = Elm.View || {};
+Elm.View.make = function (_elm) {
+   "use strict";
+   _elm.View = _elm.View || {};
+   if (_elm.View.values)
+   return _elm.View.values;
+   var _op = {},
+   _N = Elm.Native,
+   _U = _N.Utils.make(_elm),
+   _L = _N.List.make(_elm),
+   $moduleName = "View",
+   $Array = Elm.Array.make(_elm),
+   $Basics = Elm.Basics.make(_elm),
+   $Color = Elm.Color.make(_elm),
+   $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
+   $Graphics$Element = Elm.Graphics.Element.make(_elm),
+   $List = Elm.List.make(_elm),
+   $Maybe = Elm.Maybe.make(_elm),
+   $Model = Elm.Model.make(_elm),
+   $Result = Elm.Result.make(_elm),
+   $Signal = Elm.Signal.make(_elm),
+   $Text = Elm.Text.make(_elm);
+   var pillarToForm = function (p) {
+      return function () {
+         var imageName = _U.eq(p.kind,
+         $Model.Top) ? "/images/topRock.png" : "/images/bottomRock.png";
+         return $Graphics$Collage.move({ctor: "_Tuple2"
+                                       ,_0: p.x
+                                       ,_1: p.y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+         $Model.constants.pillarWidth,
+         p.height,
+         imageName)));
+      }();
+   };
+   var view = F2(function (_v0,
+   game) {
+      return function () {
+         switch (_v0.ctor)
+         {case "_Tuple2":
+            return function () {
+                 var textLineStyle = $Graphics$Collage.solid($Color.black);
+                 var score = $Graphics$Collage.move({ctor: "_Tuple2"
+                                                    ,_0: 0
+                                                    ,_1: $Model.gameHeight / 2 - 70})($Graphics$Collage.outlinedText(textLineStyle)($Text.bold($Text.color($Color.yellow)($Text.height(50)($Text.fromString($Basics.toString(game.score)))))));
+                 var pillarForms = A2($Array.map,
+                 pillarToForm,
+                 game.pillars);
+                 var getReadyAlpha = _U.eq(game.state,
+                 $Model.Start) ? 1 : 0;
+                 var gameOverAlpha = _U.eq(game.state,
+                 $Model.GameOver) ? 1 : 0;
+                 var formList = _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
+                                                                     ,_0: 0 - game.backgroundX
+                                                                     ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                             $Model.gameWidth,
+                                             $Model.gameHeight,
+                                             "/images/background.png")))
+                                             ,$Graphics$Collage.move({ctor: "_Tuple2"
+                                                                     ,_0: $Model.gameWidth - game.backgroundX
+                                                                     ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                             $Model.gameWidth,
+                                             $Model.gameHeight,
+                                             "/images/background.png")))
+                                             ,$Graphics$Collage.move({ctor: "_Tuple2"
+                                                                     ,_0: $Model.constants.playerX
+                                                                     ,_1: game.y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                             $Model.constants.planeWidth,
+                                             $Model.constants.planeHeight,
+                                             "/images/plane.gif")))
+                                             ,$Graphics$Collage.alpha(gameOverAlpha)($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                             400,
+                                             70,
+                                             "/images/textGameOver.png")))
+                                             ,$Graphics$Collage.alpha(getReadyAlpha)($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                             400,
+                                             70,
+                                             "/images/textGetReady.png")))]);
+                 var fullFormList = $List.append(formList)($Array.toList(A2($Array.push,
+                 score,
+                 pillarForms)));
+                 return A3($Graphics$Element.container,
+                 _v0._0,
+                 _v0._1,
+                 $Graphics$Element.middle)(A2($Graphics$Collage.collage,
+                 $Model.gameWidth,
+                 $Model.gameHeight)(fullFormList));
+              }();}
+         _U.badCase($moduleName,
+         "between lines 29 and 67");
+      }();
+   });
+   _elm.View.values = {_op: _op
+                      ,pillarToForm: pillarToForm
+                      ,view: view};
+   return _elm.View.values;
 };
 Elm.Window = Elm.Window || {};
 Elm.Window.make = function (_elm) {
