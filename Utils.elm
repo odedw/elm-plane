@@ -7,18 +7,16 @@ isColliding constants game pillar =
   let
     r1 =
       {left = constants.playerX - (toFloat constants.planeWidth)/2 + constants.epsilon
-      , top = game.y + (toFloat constants.planeHeight)/2 - constants.epsilon
+      , top = game.y + (toFloat constants.planeHeight)/2
       , right = constants.playerX + (toFloat constants.planeWidth)/2 - constants.epsilon
-      , bottom = game.y - (toFloat constants.planeHeight)/2 + constants.epsilon
+      , bottom = game.y - (toFloat constants.planeHeight)/2
       }
     r2 =
       {left = pillar.x - (toFloat constants.pillarWidth)/2 + constants.epsilon
-      , top = pillar.y + (toFloat pillar.height)/2 - constants.epsilon
+      , top = pillar.y + (toFloat pillar.height)/2
       , right = pillar.x + (toFloat constants.pillarWidth)/2 - constants.epsilon
-      , bottom = pillar.y - (toFloat pillar.height)/2 + constants.epsilon
+      , bottom = pillar.y - (toFloat pillar.height)/2
       }
-    r1d = Debug.watch "r1" r1
-    r2d = Debug.watch "r2" r2
   in
      not
         (r2.left > r1.right ||
