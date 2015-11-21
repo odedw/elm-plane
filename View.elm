@@ -44,9 +44,17 @@ view (w,h) game =
       score
       |> text
       |> move (0, gameHeight/2 - 70)
+    textStyle =
+      { color = Color.rgb 0 80 0
+      , width = 3
+      , cap = Round
+      , join = Smooth
+      , dashing = []
+      , dashOffset = 0
+      }
     scoreOutlineForm =
       score
-      |> outlinedText (solid (Color.rgb 0 80 0))
+      |> outlinedText textStyle
       |> move (0, gameHeight/2 - 70)
 
     textForms =

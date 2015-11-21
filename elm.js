@@ -10921,6 +10921,13 @@ Elm.View.make = function (_elm) {
                  $Model.constants.planeWidth,
                  $Model.constants.planeHeight,
                  "images/plane.gif")))]);
+                 var textStyle = {_: {}
+                                 ,cap: $Graphics$Collage.Round
+                                 ,color: A3($Color.rgb,0,80,0)
+                                 ,dashOffset: 0
+                                 ,dashing: _L.fromArray([])
+                                 ,join: $Graphics$Collage.Smooth
+                                 ,width: 3};
                  var score = $Text.bold($Text.color(A3($Color.rgb,
                  50,
                  160,
@@ -10930,10 +10937,7 @@ Elm.View.make = function (_elm) {
                                                         ,_1: $Model.gameHeight / 2 - 70})($Graphics$Collage.text(score));
                  var scoreOutlineForm = $Graphics$Collage.move({ctor: "_Tuple2"
                                                                ,_0: 0
-                                                               ,_1: $Model.gameHeight / 2 - 70})($Graphics$Collage.outlinedText($Graphics$Collage.solid(A3($Color.rgb,
-                 0,
-                 80,
-                 0)))(score));
+                                                               ,_1: $Model.gameHeight / 2 - 70})($Graphics$Collage.outlinedText(textStyle)(score));
                  var textForms = _U.eq(game.state,
                  $Model.GameOver) ? _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
                                                                          ,_0: 0
@@ -10976,7 +10980,7 @@ Elm.View.make = function (_elm) {
                  $Model.gameHeight)(fullFormList));
               }();}
          _U.badCase($moduleName,
-         "between lines 27 and 80");
+         "between lines 27 and 88");
       }();
    });
    _elm.View.values = {_op: _op
