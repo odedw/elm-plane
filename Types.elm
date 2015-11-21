@@ -10,6 +10,7 @@ type alias Pillar =
   , y : Float
   , height: Int
   , kind : Kind
+  , passed : Bool
   }
 type alias Constants =
   {

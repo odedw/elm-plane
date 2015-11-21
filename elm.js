@@ -3220,6 +3220,7 @@ Elm.Main.make = function (_elm) {
    $moduleName = "Main",
    $Array = Elm.Array.make(_elm),
    $Basics = Elm.Basics.make(_elm),
+   $Color = Elm.Color.make(_elm),
    $Graphics$Collage = Elm.Graphics.Collage.make(_elm),
    $Graphics$Element = Elm.Graphics.Element.make(_elm),
    $Keyboard = Elm.Keyboard.make(_elm),
@@ -3228,6 +3229,7 @@ Elm.Main.make = function (_elm) {
    $Random = Elm.Random.make(_elm),
    $Result = Elm.Result.make(_elm),
    $Signal = Elm.Signal.make(_elm),
+   $Text = Elm.Text.make(_elm),
    $Time = Elm.Time.make(_elm),
    $Types = Elm.Types.make(_elm),
    $Utils = Elm.Utils.make(_elm),
@@ -3248,7 +3250,7 @@ Elm.Main.make = function (_elm) {
    gameHeight = $._1;
    var constants = function () {
       var minPillarHeight = $Basics.round(gameHeight / 8);
-      var gapToPlaneRatio = 4;
+      var gapToPlaneRatio = 3.5;
       var planeHeight = 35;
       var gapHeight = $Basics.round($Basics.toFloat(planeHeight) * gapToPlaneRatio);
       return {_: {}
@@ -3267,7 +3269,7 @@ Elm.Main.make = function (_elm) {
              ,randomizer: A2($Random.$int,
              minPillarHeight,
              gameHeight - minPillarHeight - gapHeight)
-             ,timeBetweenPillars: 1.8};
+             ,timeBetweenPillars: 1.6};
    }();
    var defaultGame = {_: {}
                      ,backgroundX: 0
@@ -3278,6 +3280,32 @@ Elm.Main.make = function (_elm) {
                      ,timeToPillar: constants.timeBetweenPillars
                      ,vy: 0
                      ,y: 0};
+   var updateScore = F2(function (delta,
+   game) {
+      return function () {
+         var length = $Array.length(A2($Array.filter,
+         function (p) {
+            return $Basics.not(p.passed) && _U.cmp(p.x,
+            constants.playerX) < 0;
+         },
+         game.pillars));
+         var pillars = _U.cmp(length,
+         0) > 0 ? A2($Array.map,
+         function (p) {
+            return $Basics.not(p.passed) && _U.cmp(p.x,
+            constants.playerX) < 0 ? _U.replace([["passed"
+                                                 ,true]],
+            p) : p;
+         },
+         game.pillars) : game.pillars;
+         return _U.replace([["pillars"
+                            ,pillars]
+                           ,["score"
+                            ,_U.cmp(length,
+                            0) > 0 ? game.score + 1 : game.score]],
+         game);
+      }();
+   });
    var updatePlayerVelocity = F2(function (space,
    game) {
       return _U.replace([["vy"
@@ -3352,11 +3380,13 @@ Elm.Main.make = function (_elm) {
          return $Array.fromList(_L.fromArray([{_: {}
                                               ,height: bottomHeight
                                               ,kind: $Types.Bottom
+                                              ,passed: false
                                               ,x: gameWidth / 2 + $Basics.toFloat(constants.pillarWidth)
                                               ,y: $Basics.toFloat(bottomHeight) / 2 - gameHeight / 2}
                                              ,{_: {}
                                               ,height: topHeight
                                               ,kind: $Types.Top
+                                              ,passed: false
                                               ,x: gameWidth / 2 + $Basics.toFloat(constants.pillarWidth)
                                               ,y: gameHeight / 2 - $Basics.toFloat(topHeight) / 2}]));
       }();
@@ -3408,9 +3438,9 @@ Elm.Main.make = function (_elm) {
          {case "Space":
             return updatePlayerVelocity(input._0)(transitionState(input._0)(game));
             case "TimeDelta":
-            return updatePillars(input._0)(checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game)))));}
+            return updateScore(input._0)(updatePillars(input._0)(checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game))))));}
          _U.badCase($moduleName,
-         "between lines 60 and 72");
+         "between lines 61 and 74");
       }();
    });
    var gameState = A3($Signal.foldp,
@@ -3423,6 +3453,10 @@ Elm.Main.make = function (_elm) {
          switch (_v3.ctor)
          {case "_Tuple2":
             return function () {
+                 var textLineStyle = $Graphics$Collage.solid($Color.black);
+                 var score = $Graphics$Collage.move({ctor: "_Tuple2"
+                                                    ,_0: 0
+                                                    ,_1: gameHeight / 2 - 70})($Graphics$Collage.outlinedText(textLineStyle)($Text.bold($Text.color($Color.yellow)($Text.height(50)($Text.fromString($Basics.toString(game.score)))))));
                  var pillarForms = A2($Array.map,
                  pillarToForm,
                  game.pillars);
@@ -3456,17 +3490,18 @@ Elm.Main.make = function (_elm) {
                                              400,
                                              70,
                                              "/images/textGetReady.png")))]);
+                 var fullFormList = $List.append(formList)($Array.toList(A2($Array.push,
+                 score,
+                 pillarForms)));
                  return A3($Graphics$Element.container,
                  _v3._0,
                  _v3._1,
                  $Graphics$Element.middle)(A2($Graphics$Collage.collage,
                  gameWidth,
-                 gameHeight)(A2($List.append,
-                 formList,
-                 $Array.toList(pillarForms))));
+                 gameHeight)(fullFormList));
               }();}
          _U.badCase($moduleName,
-         "between lines 189 and 212");
+         "between lines 209 and 247");
       }();
    });
    var main = A3($Signal.map2,
@@ -3485,6 +3520,7 @@ Elm.Main.make = function (_elm) {
                       ,applyPhysics: applyPhysics
                       ,updatePillars: updatePillars
                       ,generatePillars: generatePillars
+                      ,updateScore: updateScore
                       ,transitionState: transitionState
                       ,updatePlayerVelocity: updatePlayerVelocity
                       ,pillarToForm: pillarToForm
@@ -10840,13 +10876,15 @@ Elm.Types.make = function (_elm) {
          };
       };
    };
-   var Pillar = F4(function (a,
+   var Pillar = F5(function (a,
    b,
    c,
-   d) {
+   d,
+   e) {
       return {_: {}
              ,height: c
              ,kind: d
+             ,passed: e
              ,x: a
              ,y: b};
    });
@@ -10880,7 +10918,6 @@ Elm.Utils.make = function (_elm) {
    _L = _N.List.make(_elm),
    $moduleName = "Utils",
    $Basics = Elm.Basics.make(_elm),
-   $Debug = Elm.Debug.make(_elm),
    $List = Elm.List.make(_elm),
    $Maybe = Elm.Maybe.make(_elm),
    $Result = Elm.Result.make(_elm),
@@ -10891,21 +10928,15 @@ Elm.Utils.make = function (_elm) {
    pillar) {
       return function () {
          var r2 = {_: {}
-                  ,bottom: pillar.y - $Basics.toFloat(pillar.height) / 2 + constants.epsilon
+                  ,bottom: pillar.y - $Basics.toFloat(pillar.height) / 2
                   ,left: pillar.x - $Basics.toFloat(constants.pillarWidth) / 2 + constants.epsilon
                   ,right: pillar.x + $Basics.toFloat(constants.pillarWidth) / 2 - constants.epsilon
-                  ,top: pillar.y + $Basics.toFloat(pillar.height) / 2 - constants.epsilon};
-         var r2d = A2($Debug.watch,
-         "r2",
-         r2);
+                  ,top: pillar.y + $Basics.toFloat(pillar.height) / 2};
          var r1 = {_: {}
-                  ,bottom: game.y - $Basics.toFloat(constants.planeHeight) / 2 + constants.epsilon
+                  ,bottom: game.y - $Basics.toFloat(constants.planeHeight) / 2
                   ,left: constants.playerX - $Basics.toFloat(constants.planeWidth) / 2 + constants.epsilon
                   ,right: constants.playerX + $Basics.toFloat(constants.planeWidth) / 2 - constants.epsilon
-                  ,top: game.y + $Basics.toFloat(constants.planeHeight) / 2 - constants.epsilon};
-         var r1d = A2($Debug.watch,
-         "r1",
-         r1);
+                  ,top: game.y + $Basics.toFloat(constants.planeHeight) / 2};
          return $Basics.not(_U.cmp(r2.left,
          r1.right) > 0 || (_U.cmp(r2.right,
          r1.left) < 0 || (_U.cmp(r2.top,

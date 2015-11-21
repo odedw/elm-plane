@@ -6,6 +6,7 @@ import Time exposing (..)
 import Window
 import Debug exposing (watch)
 import Array
+import Text
 import List
 import Random exposing (int, generate, initialSeed, Generator, Seed)
 import Types exposing (..)
@@ -17,7 +18,7 @@ constants : Constants
 constants =
   let
     planeHeight = 35
-    gapToPlaneRatio = 4
+    gapToPlaneRatio = 3.5
     gapHeight = round ((toFloat planeHeight) * gapToPlaneRatio)
     minPillarHeight = round (gameHeight / 8)
   in
@@ -27,7 +28,7 @@ constants =
     , playerX = 100 - gameWidth / 2
     , jumpSpeed = 370.0
     , gravity = 1500.0
-    , timeBetweenPillars = 1.8
+    , timeBetweenPillars = 1.6
     , pillarWidth = 30
     , minPillarHeight = minPillarHeight
     , planeHeight = planeHeight
@@ -55,7 +56,7 @@ defaultGame =
 update : Input -> Game -> Game
 update input game =
   -- let
-    -- newGame = Debug.watch "game" game
+  --   score = Debug.watch "score" game.score
   -- in
     case input of
       TimeDelta delta ->
@@ -66,6 +67,7 @@ update input game =
           |> applyPhysics delta
           |> checkFailState delta
           |> updatePillars delta
+          |> updateScore delta
       Space space ->
         game
           |> transitionState space
@@ -145,14 +147,32 @@ generatePillars time game =
       , y = (toFloat bottomHeight/2) - (gameHeight/2)
       , height = bottomHeight
       , kind = Bottom
+      , passed = False
       }
       ,
       { x = gameWidth/2 + (toFloat constants.pillarWidth)
       , y = (gameHeight/2 - (toFloat topHeight/2))
       , height = topHeight
       , kind = Top
+      , passed = False
       }
     ]
+
+updateScore : TimeUpdate
+updateScore delta game =
+  let
+    length =
+      Array.length <| Array.filter (\p -> not p.passed && p.x < constants.playerX) game.pillars
+    pillars =
+      if (length > 0) then
+        Array.map (\p -> if not p.passed && p.x < constants.playerX then {p | passed <- True} else p) game.pillars
+      else
+        game.pillars
+  in
+    {game |
+      pillars <- pillars
+    , score <- if length > 0 then game.score + 1 else game.score
+    }
 
 --Input updates
 transitionState : KeyUpdate
@@ -206,10 +226,25 @@ view (w,h) game =
       ,  toForm (image 400 70 "/images/textGetReady.png")
               |> alpha getReadyAlpha
       ]
+    textLineStyle = (solid black)
+    score =
+        Text.fromString (toString game.score)
+        |> (Text.height 50)
+        |> Text.color yellow
+        |> Text.bold
+        |> outlinedText textLineStyle
+        |> move (0, gameHeight/2 - 70)
+
+
+    fullFormList =
+      List.append formList
+      <| Array.toList
+      <| Array.push score pillarForms
+
   in
     container w h middle <|
     collage gameWidth gameHeight <|
-    List.append formList (Array.toList pillarForms)
+    fullFormList
 
 -- SIGNALS
 main =
