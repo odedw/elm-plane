@@ -44,10 +44,12 @@ view (w,h) game =
         |> move (0, gameHeight/2 - 70)
 
     textForms =
-      if | game.state == GameOver -> [ toForm (image 400 70 "/images/textGameOver.png")
+      if | game.state == GameOver -> [ toForm (image 250 40 "/images/textGameOver.png")
+                                       |> move (0,70)
                                      , score
                                      ]
-         | game.state == Start -> [ toForm (image 400 70 "/images/textGetReady.png")
+         | game.state == Start -> [ toForm (image 250 40 "/images/textGetReady.png")
+                                    |> move (0,70)
                                   , score
                                   ]
          | otherwise -> [score]

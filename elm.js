@@ -10858,7 +10858,7 @@ Elm.Update.make = function (_elm) {
             case "TimeDelta":
             return updateScore(input._0)(updatePillars(input._0)(checkFailState(input._0)(applyPhysics(input._0)(updateBackground(input._0)(updatePlayerY(input._0)(game))))));}
          _U.badCase($moduleName,
-         "between lines 14 and 27");
+         "between lines 11 and 24");
       }();
    });
    _elm.Update.values = {_op: _op
@@ -10925,15 +10925,19 @@ Elm.View.make = function (_elm) {
                                                     ,_0: 0
                                                     ,_1: $Model.gameHeight / 2 - 70})($Graphics$Collage.outlinedText($Graphics$Collage.solid($Color.black))($Text.bold($Text.color($Color.yellow)($Text.height(50)($Text.fromString($Basics.toString(game.score)))))));
                  var textForms = _U.eq(game.state,
-                 $Model.GameOver) ? _L.fromArray([$Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                                 400,
-                                                 70,
-                                                 "/images/textGameOver.png"))
+                 $Model.GameOver) ? _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
+                                                                         ,_0: 0
+                                                                         ,_1: 70})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                                 250,
+                                                 40,
+                                                 "/images/textGameOver.png")))
                                                  ,score]) : _U.eq(game.state,
-                 $Model.Start) ? _L.fromArray([$Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                              400,
-                                              70,
-                                              "/images/textGetReady.png"))
+                 $Model.Start) ? _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
+                                                                      ,_0: 0
+                                                                      ,_1: 70})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                              250,
+                                              40,
+                                              "/images/textGetReady.png")))
                                               ,score]) : _L.fromArray([score]);
                  var backgroundForms = _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
                                                                             ,_0: 0 - game.backgroundX
@@ -10959,7 +10963,7 @@ Elm.View.make = function (_elm) {
                  $Model.gameHeight)(fullFormList));
               }();}
          _U.badCase($moduleName,
-         "between lines 25 and 66");
+         "between lines 27 and 70");
       }();
    });
    _elm.View.values = {_op: _op
