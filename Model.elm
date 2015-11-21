@@ -50,7 +50,7 @@ type Input =
       TimeDelta (Time,Time)
     | Space Bool
 
-(gameWidth,gameHeight) = (800,480)
+(gameWidth,gameHeight) = (480,480)
 
 constants : Constants
 constants =

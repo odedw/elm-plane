@@ -3346,7 +3346,7 @@ Elm.Model.make = function (_elm) {
    $Signal = Elm.Signal.make(_elm),
    $Time = Elm.Time.make(_elm);
    var $ = {ctor: "_Tuple2"
-           ,_0: 800
+           ,_0: 480
            ,_1: 480},
    gameWidth = $._0,
    gameHeight = $._1;
