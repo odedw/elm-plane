@@ -10915,46 +10915,42 @@ Elm.View.make = function (_elm) {
          switch (_v0.ctor)
          {case "_Tuple2":
             return function () {
-                 var textLineStyle = $Graphics$Collage.solid($Color.black);
+                 var playerForm = _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
+                                                                       ,_0: $Model.constants.playerX
+                                                                       ,_1: game.y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                 $Model.constants.planeWidth,
+                 $Model.constants.planeHeight,
+                 "/images/plane.gif")))]);
                  var score = $Graphics$Collage.move({ctor: "_Tuple2"
                                                     ,_0: 0
-                                                    ,_1: $Model.gameHeight / 2 - 70})($Graphics$Collage.outlinedText(textLineStyle)($Text.bold($Text.color($Color.yellow)($Text.height(50)($Text.fromString($Basics.toString(game.score)))))));
-                 var pillarForms = A2($Array.map,
+                                                    ,_1: $Model.gameHeight / 2 - 70})($Graphics$Collage.outlinedText($Graphics$Collage.solid($Color.black))($Text.bold($Text.color($Color.yellow)($Text.height(50)($Text.fromString($Basics.toString(game.score)))))));
+                 var textForms = _U.eq(game.state,
+                 $Model.GameOver) ? _L.fromArray([$Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                                 400,
+                                                 70,
+                                                 "/images/textGameOver.png"))
+                                                 ,score]) : _U.eq(game.state,
+                 $Model.Start) ? _L.fromArray([$Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                              400,
+                                              70,
+                                              "/images/textGetReady.png"))
+                                              ,score]) : _L.fromArray([score]);
+                 var backgroundForms = _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
+                                                                            ,_0: 0 - game.backgroundX
+                                                                            ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                                    $Model.gameWidth,
+                                                    $Model.gameHeight,
+                                                    "/images/background.png")))
+                                                    ,$Graphics$Collage.move({ctor: "_Tuple2"
+                                                                            ,_0: $Model.gameWidth - game.backgroundX
+                                                                            ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
+                                                    $Model.gameWidth,
+                                                    $Model.gameHeight,
+                                                    "/images/background.png")))]);
+                 var pillarForms = $Array.toList(A2($Array.map,
                  pillarToForm,
-                 game.pillars);
-                 var getReadyAlpha = _U.eq(game.state,
-                 $Model.Start) ? 1 : 0;
-                 var gameOverAlpha = _U.eq(game.state,
-                 $Model.GameOver) ? 1 : 0;
-                 var formList = _L.fromArray([$Graphics$Collage.move({ctor: "_Tuple2"
-                                                                     ,_0: 0 - game.backgroundX
-                                                                     ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                             $Model.gameWidth,
-                                             $Model.gameHeight,
-                                             "/images/background.png")))
-                                             ,$Graphics$Collage.move({ctor: "_Tuple2"
-                                                                     ,_0: $Model.gameWidth - game.backgroundX
-                                                                     ,_1: 0})($Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                             $Model.gameWidth,
-                                             $Model.gameHeight,
-                                             "/images/background.png")))
-                                             ,$Graphics$Collage.move({ctor: "_Tuple2"
-                                                                     ,_0: $Model.constants.playerX
-                                                                     ,_1: game.y})($Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                             $Model.constants.planeWidth,
-                                             $Model.constants.planeHeight,
-                                             "/images/plane.gif")))
-                                             ,$Graphics$Collage.alpha(gameOverAlpha)($Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                             400,
-                                             70,
-                                             "/images/textGameOver.png")))
-                                             ,$Graphics$Collage.alpha(getReadyAlpha)($Graphics$Collage.toForm(A3($Graphics$Element.image,
-                                             400,
-                                             70,
-                                             "/images/textGetReady.png")))]);
-                 var fullFormList = $List.append(formList)($Array.toList(A2($Array.push,
-                 score,
-                 pillarForms)));
+                 game.pillars));
+                 var fullFormList = $List.append(backgroundForms)($List.append(playerForm)($List.append(pillarForms)(textForms)));
                  return A3($Graphics$Element.container,
                  _v0._0,
                  _v0._1,
@@ -10963,7 +10959,7 @@ Elm.View.make = function (_elm) {
                  $Model.gameHeight)(fullFormList));
               }();}
          _U.badCase($moduleName,
-         "between lines 29 and 67");
+         "between lines 25 and 66");
       }();
    });
    _elm.View.values = {_op: _op
