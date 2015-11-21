@@ -38,21 +38,31 @@ view (w,h) game =
     score =
         Text.fromString (toString game.score)
         |> (Text.height 50)
-        |> Text.color Color.yellow
+        |> Text.color (Color.rgb 50 160 50)
         |> Text.bold
-        |> outlinedText (solid Color.black)
-        |> move (0, gameHeight/2 - 70)
+    scoreForm =
+      score
+      |> text
+      |> move (0, gameHeight/2 - 70)
+    scoreOutlineForm =
+      score
+      |> outlinedText (solid (Color.rgb 0 80 0))
+      |> move (0, gameHeight/2 - 70)
 
     textForms =
-      if | game.state == GameOver -> [ toForm (image 250 40 "/images/textGameOver.png")
+      if | game.state == GameOver -> [ toForm (image 250 45 "/images/textGameOver.png")
                                        |> move (0,70)
-                                     , score
+                                     , scoreOutlineForm
+                                     , scoreForm
                                      ]
-         | game.state == Start -> [ toForm (image 250 40 "/images/textGetReady.png")
+         | game.state == Start -> [ toForm (image 250 45 "/images/textGetReady.png")
                                     |> move (0,70)
-                                  , score
+                                  , scoreOutlineForm
+                                  , scoreForm
                                   ]
-         | otherwise -> [score]
+         | otherwise -> [ scoreOutlineForm
+                        , scoreForm
+                        ]
 
     playerForm =
       [ toForm (image constants.planeWidth constants.planeHeight "/images/plane.gif")
