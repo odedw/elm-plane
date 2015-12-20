@@ -26,10 +26,13 @@ update input game =
 --Time updates
 updatePlayerY : TimeUpdate
 updatePlayerY delta game =
-  {game | y <-
-    if | game.state == Start -> game.y + (sin (game.backgroundX / 10))
-       | game.state == Play || (game.state == GameOver && game.y > -gameHeight/2)-> game.y + game.vy * (snd delta)
-       | otherwise -> game.y
+  {game | y =
+    if game.state == Start then
+      game.y + (sin (game.backgroundX / 10))
+    else if game.state == Play || (game.state == GameOver && game.y > -gameHeight/2) then
+      game.y + game.vy * (snd delta)
+    else
+      game.y
   }
 
 isColliding : Constants -> Game -> Pillar -> Bool
@@ -65,7 +68,7 @@ checkFailState delta game =
     playerCollidedWithPillar =
       collisionPillars > 0
   in
-    {game | state <-
+    {game | state =
       if game.state == Play && (playerOffScreen || playerCollidedWithPillar) then
         GameOver
       else
@@ -74,38 +77,49 @@ checkFailState delta game =
 
 updateBackground : TimeUpdate
 updateBackground delta game =
-  {game | backgroundX <-
-    if | game.backgroundX > gameWidth -> 0
-       | game.state == GameOver -> game.backgroundX
-       | otherwise -> game.backgroundX + (snd delta) * constants.backgroundScrollV
+  {game | backgroundX =
+    if game.backgroundX > gameWidth then
+      0
+    else if game.state == GameOver then
+      game.backgroundX
+    else
+      game.backgroundX + (snd delta) * constants.backgroundScrollV
   }
 
 applyPhysics : TimeUpdate
 applyPhysics delta game =
-  {game | vy <-
-    if | game.state == GameOver && game.y <= -gameHeight/2 -> 0
-       | otherwise -> game.vy - (snd delta) * constants.gravity
+  {game | vy =
+    if game.state == GameOver && game.y <= -gameHeight/2 then
+      0
+    else
+      game.vy - (snd delta) * constants.gravity
   }
 
 updatePillars : TimeUpdate
 updatePillars delta game =
   let
     timeToPillar =
-      if | game.timeToPillar <= 0 -> constants.timeBetweenPillars
-         | game.state == Play -> game.timeToPillar - (snd delta)
-         | otherwise -> game.timeToPillar
+      if game.timeToPillar <= 0 then
+        constants.timeBetweenPillars
+      else if game.state == Play then
+        game.timeToPillar - (snd delta)
+      else
+        game.timeToPillar
     shouldAddPillar = timeToPillar == constants.timeBetweenPillars && game.state == Play
     updatedPillars =
-      Array.map (\p -> {p | x <- p.x - constants.foregroundScrollV * (snd delta)}) game.pillars |>
+      Array.map (\p -> {p | x = p.x - constants.foregroundScrollV * (snd delta)}) game.pillars |>
       Array.filter (\p -> p.x > -(gameWidth/2))
     pillars =
-      if | game.state /= Play -> game.pillars
-         | shouldAddPillar -> Array.append  (generatePillars (fst delta) game) updatedPillars
-         | otherwise -> updatedPillars
+      if game.state /= Play then
+        game.pillars
+      else if shouldAddPillar then
+        Array.append (generatePillars (fst delta) game) updatedPillars
+      else
+        updatedPillars
 
   in
-    { game | timeToPillar <- timeToPillar
-          , pillars <- pillars
+    { game | timeToPillar = timeToPillar
+          , pillars = pillars
     }
 
 generatePillars : Time -> Game -> Array.Array Pillar
@@ -140,13 +154,13 @@ updateScore delta game =
       Array.length <| Array.filter (\p -> not p.passed && p.x < constants.playerX) game.pillars
     pillars =
       if (length > 0) then
-        Array.map (\p -> if not p.passed && p.x < constants.playerX then {p | passed <- True} else p) game.pillars
+        Array.map (\p -> if not p.passed && p.x < constants.playerX then {p | passed = True} else p) game.pillars
       else
         game.pillars
   in
     {game |
-      pillars <- pillars
-    , score <-
+      pillars = pillars
+    , score =
       if length > 0 then
         game.score + 1
       else
@@ -160,14 +174,16 @@ transitionState space game =
     defaultGame --Reset
   else
     {game |
-      state <-
-        if | game.state == Start && space -> Play
-           | otherwise -> game.state
+      state =
+        if game.state == Start && space then
+          Play
+        else
+          game.state
     }
 
 updatePlayerVelocity : KeyUpdate
 updatePlayerVelocity space game =
-  {game | vy <-
+  {game | vy =
     if game.state == Play && space then
       constants.jumpSpeed
     else
