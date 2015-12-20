@@ -58,19 +58,22 @@ view (w,h) game =
       |> move (0, gameHeight/2 - 70)
 
     textForms =
-      if | game.state == GameOver -> [ toForm (image 250 45 "images/textGameOver.png")
-                                       |> move (0,70)
-                                     , scoreOutlineForm
-                                     , scoreForm
-                                     ]
-         | game.state == Start -> [ toForm (image 250 45 "images/textGetReady.png")
-                                    |> move (0,70)
-                                  , scoreOutlineForm
-                                  , scoreForm
-                                  ]
-         | otherwise -> [ scoreOutlineForm
-                        , scoreForm
-                        ]
+      if game.state == GameOver then
+        [ toForm (image 250 45 "images/textGameOver.png")
+          |> move (0,70)
+        , scoreOutlineForm
+        , scoreForm
+        ]
+      else if game.state == Start then
+        [ toForm (image 250 45 "images/textGetReady.png")
+          |> move (0,70)
+        , scoreOutlineForm
+        , scoreForm
+        ]
+      else
+        [ scoreOutlineForm
+        , scoreForm
+        ]
 
     playerForm =
       [ toForm (image constants.planeWidth constants.planeHeight "images/plane.gif")
