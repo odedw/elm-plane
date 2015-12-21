@@ -7,7 +7,6 @@ import Array
 import Text
 import List
 import Model exposing (..)
-import Update exposing (..)
 
 pillarToForm : Pillar -> Form
 pillarToForm p =
