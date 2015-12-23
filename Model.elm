@@ -34,7 +34,6 @@ type alias Constants =
 
 type alias Game =
   { state : State
-  , foregroundX : Float
   , backgroundX : Float
   , y : Float
   , vy : Float
@@ -73,7 +72,6 @@ constants =
 defaultGame : Game
 defaultGame =
   { state = Start
-  , foregroundX = 0
   , backgroundX = 0
   , y = 0
   , vy = 0
