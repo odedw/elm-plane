@@ -6,6 +6,15 @@ import Array
 import Random exposing (int, generate, initialSeed, Generator, Seed)
 import Model exposing (..)
 
+type alias KeyUpdate =
+  Bool -> Game -> Game
+
+type alias TimeUpdate =
+  (Time,Time) -> Game -> Game
+
+type Input =
+      TimeDelta (Time,Time) | Space Bool
+
 update : Input -> Game -> Game
 update input game =
   case input of

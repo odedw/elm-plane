@@ -5,13 +5,13 @@ import Time exposing (..)
 
 type State = Play | Start | GameOver
 
-type Kind = Top | Bottom
+type PillarKind = Top | Bottom
 
 type alias Pillar =
   { x : Float
   , y : Float
   , height: Int
-  , kind : Kind
+  , kind : PillarKind
   , passed : Bool
   }
 
@@ -42,15 +42,6 @@ type alias Game =
   , pillars : Array.Array Pillar
   , score : Int
   }
-
-type alias KeyUpdate =
-  Bool -> Game -> Game
-
-type alias TimeUpdate =
-  (Time,Time) -> Game -> Game
-
-type Input =
-      TimeDelta (Time,Time) | Space Bool
 
 (gameWidth,gameHeight) = (480,480)
 
