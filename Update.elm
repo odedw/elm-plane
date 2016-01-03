@@ -89,10 +89,10 @@ updateBackground delta game =
 applyPhysics : TimeUpdate
 applyPhysics delta game =
   {game | vy =
-    if game.state == GameOver && game.y <= -gameHeight/2 then
-      0
-    else
+    if game.state == Play || game.state == GameOver && game.y > -gameHeight/2 then
       game.vy - (snd delta) * constants.gravity
+    else
+      0
   }
 
 updatePillars : TimeUpdate
