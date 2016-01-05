@@ -2,9 +2,9 @@
 
 A flappy bird clone written in [Elm](http://elm-lang.org/) using assets by [Kenney](http://kenney.nl/assets/tappy-plane).
 
-[Play it here](http://www.odedwelgreen.com/elm-plane/)
+[Read a blog post about it here](http://www.odedwelgreen.com/blog/elm-plane/)
 
-Blog post soon to follow...
+[Play it here](http://www.odedwelgreen.com/elm-plane/)
 
 The MIT License (MIT)
 
