@@ -6,6 +6,8 @@ A flappy bird clone written in [Elm](http://elm-lang.org/) using assets by [Kenn
 
 [Play it here](http://www.odedwelgreen.com/elm-plane/)
 
+Also checkout [Miso Plane](https://github.com/Lermex/miso-plane), a flappy bird clone written in Haskell with Miso.
+
 The MIT License (MIT)
 
 Copyright (c) 2015 Oded Welgreen
